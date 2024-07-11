@@ -47,8 +47,8 @@ def extract_text_from_url(url):
     response = requests.get(url)
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
-        text_content = soup.get_text(strip=True)[:500]  # Extract first 500 characters
-        return text_content
+        text_contents = soup.get_text(strip=True)[:500]  # Extract first 500 characters
+        return text_contents
     else:
         return None
 
