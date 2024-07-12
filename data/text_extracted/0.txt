@@ -1,0 +1,687 @@
+SOMEIP Intrusion Detection using Deep
+Learningbased Sequential Models in Automotive
+Ethernet Networks
+1stNatasha Alkhatib
+LTCI
+Telecom Paris IP Paris
+Palaiseau France
+natashaalkhatibtelecomparisfr2ndHadi Ghauch
+LTCI
+Telecom Paris IP Paris
+Palaiseau France
+hadighauchtelecomparistechfr3rdJeanLuc Danger
+LTCI
+Telecom Paris IP Paris
+Palaiseau France
+jeanlucdangertelecomparisfr
+Abstract Intrusion Detection Systems are widely used to
+detect cyberattacks especially on protocols vulnerable to hacking
+attacks such as SOMEIP In this paper we present a deep
+learningbased sequential model for ofine intrusion detection
+on SOMEIP application layer protocol To assess our intrusion
+detection system we have generated and labeled a dataset1with
+several classes representing realistic intrusions and a normal
+class  a signicant contribution due to the absence of such
+publicly available datasets Furthermore we also propose a
+recurrent neural network RNN as an instance of deep learning
+based sequential model that we apply to our generated dataset
+The numerical results show that RNN excel at predicting in
+vehicle intrusions with F1 Scores and AUC values greater than
+08 depending on each intrusion type
+Index Terms Intrusion detection Recurrent Neural Network
+SOMEIP Serviceoriented communication Automotive Ether
+net Invehicle security Sequential Models Deep Learning
+I I NTRODUCTION
+Automobiles are no longer solely made up of mechanical
+systems In fact mechanical components have been taken
+over by electronics called Electronic Control Units ECUs
+These connected ECUs through various invehicle network
+infrastructures CAN FlexRay MOST and LIN are in charge
+of making various car functions possible However these
+traditional invehicle networks have many limitations in terms
+of bandwidth and higher layer protocols An adaptable and
+scalable invehicle network technology is thus required to
+realize sophisticated and innovative customer functions such
+as Adaptive cruise control Collision avoidance Driver drowsi
+ness detection Lane departure warning and others To fulll
+these automotive requirements Automotive Ethernet tech
+nologies have been developed and standardized
+The deployment of Ethernetbased communication in in
+vehicle network systems has several other benets such as
+the ability to reuse the associated OSI layers protocols built
+and tested in other industries 21 Furthermore this cutting
+edge technology enables the invention of new protocols for
+individual layers while reusing protocols for the rest such as
+the development of the automotive application layer protocol
+1Dataset URL httpsgithubcomAlkhatibnatashaSOMEIP IDSScalable serviceOriented MiddlewarE over IP SOMEIP
+15
+SOMEIP is commonly used for relevant automotive ap
+plications due to its servicebased communication approach
+and its adaptability to different automotive operating systems
+eg QNX OSEK and Linux 21 In other words SOMEIP
+is increasingly adopted to coordinate the exchange of various
+services between disjoint applications on distinct ECUs These
+services cover notications about invehicle events as well as
+Remote Procedure Call RPC functions that enable an ECU
+client to request information from an ECU server However
+no security measures such as authentication or encryption are
+dened in the SOMEIP protocol specication 3 In fact the
+absence of SOMEIP security protocols may set the ground
+for an attacker to exploit a legitimate automotive system and
+initiate attacks from inside the network such as intercepting
+and manipulating messages between two ECUs and other
+signicant threats To reduce the risk of the various inherent
+security threats a robust defense plan is needed which rst
+requires detecting and analyzing these vulnerabilities
+Due to their large approximation capacity deep learning
+based approaches are wellsuited to detect network intrusions
+in various network types 1 14 In this work we have devel
+oped a deep learning based sequential model to detect network
+intrusions on the SOMEIP protocol Sequential models are
+a category of deep learning model where the training set
+is known apriori to have a dominant temporal or causal
+component indeed packets in a session of the SOMEIP
+protocol exhibit a strong temporal correlation as each packet
+depends on previous ones In the current work we will
+contribute to the development of a sequencebased SOMEIP
+dataset as no public SOMEIP dataset exists Specically
+we generate and label a SOMEIP dataset with four classes
+of general intrusion packets as well as a class of normal
+packets Moreover our proposed deep learningbased model
+a recurrent neural network RNN is able to classify these
+four intrusions on packets sequences and the normal ones
+with very large accuracy and F1 score Furthermore we will
+evaluate our deep learningbased sequential model using thearXiv210808262v2  csCR  10 Oct 2021
+ 
+generated dataset
+Towards this end our paper is organized into six sections
+Section 2 discusses main publications that are related to
+SOMEIP intrusion detection In section 3 we present an
+overview of the SOMEIP protocol In section 4 we present
+our dataset and the different considered attacks The suggested
+sequential model is presented in Section 5 In section 6 we
+present the different evaluation metrics used for performance
+evaluation We discuss our experimental results in section 7
+Finally we conclude our paper with future work direction
+Fig 1 SOMEIP packet
+II R ELATED WORK
+Deep Learning approaches were highly used in previous
+works to detect network intrusions on the traditional invehicle
+network protocol CAN 10 11 12 14 However no
+previous work has been addressed to detect intrusions on
+Automotive Ethernet especially SOMEIP protocol using Deep
+Learning due to the following reasons
+Lack of Automotive Ethernet dataset The existence
+of large CAN databases 13 containing both normal and
+abnormal network trafc behaviour has resulted in ex
+tensive research into deep learning applications on CAN
+However SOMEIP application layer protocol does not
+have wellknown dataset available Despite the fact that
+a new Automotive Ethernet dataset is recently published
+22 it is not helpful for our current work since it covers
+normal and abnormal streams of audiovideo transport
+protocol A VTP which is different than SOMEIP pro
+tocol Thus the generation of the labeled dataset and its
+publication is one but not the only contribution of the
+current paper
+Automotive Ethernet Standard gaining momentum
+Automotive Ethernet a recent network protocol for ve
+hicles is gaining increasing momentum in standards for
+connected vehicles
+In terms of SOMEIPs latest security vulnerability investi
+gations researchers have begun to investigate its key vul
+nerabilities that could lead to cyberattacks on the invehicle
+network as well as to develop IDS using different approaches
+Fig 2 Congured Network  Different SOMEIP clients and servers ex
+changing SOMEIP services over Automotive Ethernet Bus Besides a Client
+ECU is being compromised by an MITM Attacker
+Gehrmann et al 5 addressed specic problems and op
+portunities for intrusion detection in SOMEIP as well as
+suggested an architecture for a SOMEIP intrusion detection
+scheme and discussed its security features Iorio et al 6
+7 proposed a novel architecture to enhance the security
+of evolving SOMEIP middleware Li at al 16 developed
+Ori a Greybox Fuzzer that can efciently detect breaches
+in SOMEIP applications Lauser et al 9 have discussed
+how formal models can be used to verify the security of
+protocols used in modern vehicles Rumez et al 8 explained
+various security countermeasures in the elds of rewalls
+intrusion detection systems IDSs and identity and access
+management Herold et al 3 proposed a rulebased IDS for
+SOMEIP protocol
+To the best of our knowledge none of the previous works
+have applied deep learningbased sequential models for intru
+sion detection on SOMEIP protocol That is a main contribu
+tion of this work in addition to the generation of the labeled
+dataset with multiple classes of intrusions and a normal class
+III O VERVIEW OF SOMEIP
+AMiddleware refers to a connective tissue between
+different software applications In other words it handles
+all functions that are needed for a service to allow data
+exchange between several ECUs 21 Due to the growing
+amount of software 17 in automobiles as well as the
+spread of functions within their invehicle network and the
+deployment of a variety of software architectures and operating
+systems inside vehicles the implementation of a middleware
+software within invehicle networks is essential in bridging the
+gap between them Hence after being proposed by the BMW
+Group in 2011 and standardized by AUTOSAR SOMEIP
+was chosen as the standard middleware for IPbased service
+oriented communication in cars The middleware SOMEIP
+runs at top levels of the OSI model 5 The structure of
+its header layout is as shown in Figure 1 Some of the
+elds presented in the header of the SOMEIP packet will
+ 
+Fig 3 Attacks on SOMEIP protocol
+be considered in our work as the input features for the deep
+learning based IDS Table IV
+A SOMEIP Remote Procedure Calls
+Since SOMEIP is a servicebased communication ap
+proach it allows the exchange of different types of remote
+procedure calls In general a remote procedure call RPC is an
+interprocess communication technique that is used for client
+server based applications 15 In this current work we have
+considered three main types of SOMEIP RPC 
+RequestResponse  a method with Request and Response
+messages The Request is a message sent by the client
+when it invokes a method The Response is a message
+sent from the server to the client that contains the method
+invocations outcome
+Fire and Forget  a procedure that only uses Request
+messages As in the RequestResponse scenario the
+client calls a server method However unlike in the
+RequestResponse instance the client does not anticipate
+a response
+Events  In this method the server sends messages to the
+client with particular information either periodically or
+whenever there is a change event The server expects
+no response from the client
+
+TABLE I
+TRAINING AND TESTING DATASET CLASSES
+Class Training Dataset Testing Dataset
+Normal 2533 2471
+Error on Error 39 54
+Error on Event 60 54
+Missing Response 92 81
+Missing Request 83 111
+Total 2807 2771
+IV G ENERATING LABELED DATASET
+A Dataset Generation
+1 SOMEIP packet generator In order to generate
+SOMEIP libpcap dump les we have used the SOMEIP
+Generator developed by 3 implemented in Python 3 and
+available in Github 4 The generator models the behavior ofdifferent clients and servers assumed to behave according to
+the AUTOSAR standard specication as well as an attacker
+carrying out a variety of attacks depicted in Figure 3 and
+described in section IVA3 As seen in Figure 4 and Table II
+we have tuned the different parameters for generating different
+attack scenarios such as the network architecture conguration
+depicted in Figure 2 the SOMEIP services to be exchanged
+and the attack to be implemented along with its frequency of
+execution For training and testing our deep learning based
+IDS we have generated several pcap les corresponding
+to different attack types concatenated them and processed
+them as described in section IVA4 The distributions of both
+datasets are shown in Table I and their corresponding features
+are described in Table IV The training dataset comprises about
+274 attacks is 132 MB in size and contains 2807 packets
+Regarding the testing dataset it contains around 300 attacks
+has a size of 130 MB and composed of 2771 packets Readers
+can get our SOMEIP intrusion dataset by referring to 24
+Fig 4 Dataset Generation
+2 Dataset Imbalance As seen in table I the distribution of
+samples across the different classes is biased In fact the attack
+classes frequency is highly imbalanced ie there is a bias or
+skewness towards the majority class Normal class present
+in the target It is reasonable to have such a skewed dataset
+ 
+TABLE II
+TUNED PARAMETERS FOR DATASET GENERATION REPRESENTS FIRST STEP IN FIGURE 4
+Parameters to congure Description Chosen Value
+DevicesContains information like name type mac ip 8 Servers 8 Clients and
+sender port and receiving port of each Client Server and Attacker 1 Attacker
+Services Contains information about offered and requested services 3 Services
+Number of packets to generate per Client Method and Service Denes the number of packets generated per client 50
+Number of attacks to execute Denes the rate an attack will be performed 10
+Minimum Response Time of Attacker Denes the minimum response time of the attacker in ms 1
+Maximum Response Time of Attacker Denes the maximum response time of the attacker in ms 3
+Implemented AttackError On Error
+Denes which attacks can be used Error On Event
+Missing Request
+Missing Response
+Output File Location Describes the location where to store the resulting pcap outputpcap
+since it represents an anomaly problem However we do not
+aim changing the nature of the data and make it balanced
+even though this problem poses a challenge for predictive
+modeling as most of the supervised deep learning algorithms
+used for classication were designed around the assumption
+of an equal number of examples for each class An alternative
+solution would be the adoption of specialized techniques such
+asAdaptive Weighting 25 This technique implemented in
+our work is considered as a popular approach for imbalance
+learning since it weighs samples in rare classes with high cost
+and then applies costsensitive learning methods to deal with
+imbalance in classes Table III presents the weights assigned
+for each class for the dataset considered in this work
+TABLE III
+CLASS WEIGHT
+Class Class Weight
+Normal 016
+Error on Event 668
+Error on Error 1035
+Missing Response 433
+Missing Request 486
+3 SOMEIP intrusions The SOMEIP attacker is able to
+compromise a known device within the system Thus it has a
+valid MAC address IP address and service ID It eavesdrops
+on all trafc within the network and send packets to all
+clients and all servers and thus impersonates other SOMEIP
+devices and services 3 Through our work we are interested
+in cyberattacks which lead to deviations from the protocol
+specications in a communication session between two devices
+as seen in Figure 3 and which can be detected using deep
+learning based sequential Models These four intrusion types
+considered in this work are detailed below illustrated also in
+Figure 3
+Requests without Response  Requests have to be an
+swered with either a response or an error message If
+a request was never answered it means that an attacker
+has relayed the communication between the client and the
+server who believe that they are directly communicatingTABLE IV
+DATASET FEATURES
+Feature Description
+Service ID A unique identier for a service
+Method IDA unique identier of a method
+an event or a eld that belong to the service
+Client IDAllows a server to differentiate
+calls from multiple clients to the same method
+Message TypeUsed to differentiate different types of messages
+such as  requestrequest no return
+notication response and error
+Session IdAllows a subscriber to differentiate multiple
+calls to the same method
+Interface Version Contains the Major Version of the Service Interface
+Protocol Version Contains the SOMEIP protocol version
+Return CodeUsed to signal whether a request
+was successfully processed
+IP source IP of the sending device
+IP destination IP of the receiving device
+Protocol Application layer protocol
+Source Port Port number of the sending device
+Destination Port Port number of the receiving device
+Mac source MAC Address of the sending device
+Mac destination MAC Address of the receiving device
+LabelSpecies the class of each packet such as normal
+error on error error on event request without
+response response without request
+with each other
+Response without Request  A response should only be
+delivered in response to an open previous request As a
+result a normal request with message type 0x00 should
+be answered by a single response with message type
+0x80 Two replies to a single request break the protocol
+and may indicate the existence of an attacker attempting
+to impersonate the server and injecting extra packets
+Error on Error  Based on AUTOSAR standard speci
+cation an error message should not be answered with
+another error message Hence an incoming error which
+doesnt have a corresponding request or other packet
+with the same settings indicates the presence of a network
+intrusion
+Error on Event  Notications should not be answered
+with an error message Thus a notication replied to with
+ 
+an error depicts a network intrusion between the client
+and the server
+4 Data Preparation This section describes the different
+steps seen in Figure 4 achieved for our dataset to be fed to
+our deep learning based IDS for training and testing
+1Packets generation and labeling The SOMEIP
+packet generator is able to generate pcap les composed
+of unlabeled packets gathered from the whole network
+Since we are using a supervised learning approach we
+had to label each packet Hence a packet is labeled by
+0 if it behaves according to the AUTOSAR standard
+specication Otherwise it is labeled by 123 or 4
+if it represents error on event error on error request
+without response or response without request attacks
+respectively
+2Packets Feature Extraction and OneHot Encoding
+Each packet is represented by 16 categorical features
+described in Table IV However these features had to
+be converted to binary vectors using onehot encoding
+technique In fact many deep learning algorithms cannot
+work with categorical data directly Hence the cate
+gories must be converted into numbers This is required
+for both input and output variables that are categorical
+After encoding the 15 features that represented input
+variables were extended to 195 features and the output
+variable Label was extended to 5 classes
+3Grouping Packets into Sequences In order to detect
+intrusions affecting the communication behavior be
+tween two devices we had to group packets that belong
+to each communication in their appropriate sequence
+Hence each sequence represents a series of ordered
+packets exchanged between a client and a server with
+the same session identier As seen in Figure 4 we
+have grouped packets in their corresponding sequences
+Thus our IDS will detect the presence of an intrusion
+in a communication between a client and a server by
+inspecting each sequence of packets However since
+we are dealing with variable length sequence prediction
+problems our data had be transformed such that each
+sequence has the same length Hence after transfor
+mation each sequence contains 60 packets which is
+the maximum number of packets per sequence ie a
+sequence is padded by zeros if it contains less than
+60 packets per session Our dataset was generated with
+the constraints that only one type of attack can occur
+between two devices Therefore sequences are either
+labeled as normal or by a number corresponding to only
+one of the four possible intrusions Furthermore an
+attack begins and ends in the same session between a
+client and a server Hence an attack cannot be executed
+in different sessions at the same time
+4Sequences Concatenation Finally after labeling the
+different sequences that represent diverse attacks we
+have concatenated them in a single dataset that will used
+for training and testing the deep learning based IDSV P ROPOSED SEQUENTIAL MODEL
+Fig 5 RNN based IDS architecture
+Deep Learning based sequential models have been widely
+adopted to detect intrusions and anomalies in various type
+of computer networks 18 19 20 Our proposal in this
+section is to employ Recurrent Neural Networks or RNN as
+a sequential model to the labeled dataset generated in the
+previous section The proposed RNN is presented in Figure
+5 Furthermore its resulting hyperparameters are shown in
+Table V The input to the RNN consists of 60 ordered packets
+with 195 features each It passes to two stacked RNN layers
+which have recurrent connections between hidden units The
+two RNN layers read the entire input sequence of 60 packets
+and feed their output to a dense layer which produces 5
+outputs corresponding to each the 5 classes using softmax
+function We denote the training set fxtytgT
+t1 wherext
+is the feature vector a vector of dimension 195 for sample
+t2f1Tgytrepresents the corresponding label for sample
+t2f1Tg andTthe number of samples in the training
+set Moreover each label in the training set is such that ytis
+a binary vector of dimension 5 ieyt2B5 where element
+i2f15gof the vector ytis a binary variable representing
+whether the corresponding feature vector xt belongs ie
+corresp entry  1 or does not belong ie corres entry  0
+ to classi2f15g Furthermore ytmay only have one
+nonzero entry which follows from our previous assumption
+that only one intrusion is possible in each sample
+The equations describing the operation for the RNN are the
+following 
+atWht1Uxtb8t2f1T1g 1
+ht at 2
+otVhtc 3
+ytot 4
+ 
+where the vector atis a linear combination between xt the
+feature vector for sample t and the hidden layer output of
+the RNN for sample t1ht1htis a vector modeling the
+hidden layer output of the RNN for sample tota vector
+of dimension 5 is a linear combination of the output hidden
+layerhtytis the prediction that RNN outputs for sample xt
+ and has the same properties as ytWUV are the shared
+weights matrices that will optimized in training  andare
+nonlinear activation functions applied elementbyelement on
+their respective inputs
+TABLE V
+HYPERPARAMETERS
+Hyperparameters Values
+Number of layers 3
+Number of Neurons per layer 50105
+Activation Function per layer tanhtanhsoftmax
+Optimizer Adam
+Loss Categorical Cross Entropy
+Learning Rate 0001
+Batch size 100
+Epoch size 50
+VI E VALUATION METRICS
+We use the Area Under The Curve AUC values Receiver
+Operating Characteristics ROC curves and F1 scores and
+calculate them for each class to assess our IDS performance
+We also present the multiclass confusion matrices which
+contains information about the actual and prediction classica
+tions done by the classier to describe the performance of the
+multiclassier models The training samples corresponding to
+the label ground truth yt are represented by each row of
+the matrix whereas the occurrences in a predicted label yt
+RNN output are represented by each column Specically
+for the task at hand the confusion matrix will be a 55
+where element ij2 f15gf 15gdenotes the
+normalized number of occurrences  where the true label is
+from classi2f15g and the predicted label is from class
+j2f15g Thus for an ideal multiclass classier all the
+diagonal entries should be 1 while the offdiagonal entries
+should be 0
+In addition to the confusion matrix we use the following
+other metrics
+Recall is the ratio of correctly predicted positive observa
+tions of all the observations in the actual class
+Recall TP
+TPFN5
+Precision is the ratio of correctly predicted positive observa
+tions of all the observations in the predicted class
+Precision TP
+TPFP6
+Hence the F1Score is calculated using the following equa
+tion
+F1Score 2PrecisionRecall
+Precision Recall7Where TP  True Positive FP  False Positive TN  True
+Negative FN  False Negative
+Since the dataset is imbalanced the F1 score which is
+the weighted average results of both metrics precision and
+recall is essential for evaluating the deep learning based IDS
+performance The model has a large predictive power if the
+F1 score is near to 10
+The receiver operating characteristic curve or ROC curve is
+a graphical representation of a classier systems performance
+while its discrimination threshold is modied It is calculated
+by displaying the true positive rate TPR vs the false positive
+rate FPR at different threshold levels The ideal classier
+should provide a point in the upper left corner of the ROC
+space or coordinate 01 signifying 100 percent sensitivity
+no false negatives and 100 percent specicity no false
+positives AUC stands for Area under the ROC Curve It
+measures the entire twodimensional area underneath the entire
+ROC curve The AUC for an ideal classier should be 1
+In the experiments we use the Python library Keras 2 to
+implement our RNN model We train and evaluate our model
+on an IntelR CoreTM i56440HQ CPU  260GHz
+VII R ESULTS
+Using the generated dataset we ran a threefold cross
+validation with early stopping to ensure a large statistical
+condence for our models prediction performance In each
+crossvalidation 67 and 33 of the data are chosen at
+random as the training and validation sets respectively The
+training set is used for model tting and the validation set
+is used for model evaluation for each of the hyperparameter
+sets Furthermore they have the same proportion of classes
+in each validation fold After crossvalidation we got three
+trained RNN models To assess the overall performance of
+our approach we ran three experiments on the testing dataset
+one for each trained model
+TABLE VI
+RESULTS ON VALIDATION DATA
+Fold Class Recall Precision F1Score
+1Normal 099 099 099
+Error on Event 1 087 093
+Error on Error 061 061 061
+Missing Response 093 093 093
+Missing Request 093 1 096
+2Normal 099 099 099
+Error on Event 1 095 097
+Error on Error 077 091 083
+Missing Response 090 093 091
+Missing Request 093 096 095
+3Normal 099 099 099
+Error on Event 09 1 095
+Error on Error 1 087 093
+Missing Response 097 088 093
+Missing Request 077 087 082
+The classication results for threefold crossvalidation are
+shown in Table VI The experimental results demonstrated that
+the model performed well with acceptable F1score values for
+each class of the validation folds Thus the models can classify
+ 
+Fig 6 Confusion matrices for three different models on Validation dataset
+Fig 7 Confusion matrices for three different models on Testing dataset
+Fig 8 ROC Curves and AUC values of each class of the Validation datasets
+almost all type of attacks on sequences correctly Moreover
+no signicant difference in performance metrics exists across
+the three crossvalidations As a result the training process is
+robust with the selected hyperparameters
+Figure 6 show a summary of prediction results on the 3 folds
+for the multiclassication intrusion detection problem during
+crossvalidation The models have few prediction errors as
+values outside the diagonal of the confusion matrices approach
+zero Hence the models have well performed since most of the
+samples are located in the diagonal of the confusion matrices
+Figure 8 presents the ROC curves and AUC values for each
+attack type and for each model microROC and macroROC
+curves during the threefold crossvalidation The displayed
+gures has AUC values near 1 which means the 3 modelshave a good measure of separability for the different attack
+types Furthermore the different roc curves have a point in the
+upper left corner or coordinate 01 of the ROC space for each
+model representing the ability of the model to have a a huge
+sensitivity no false negatives and an outstanding specicity
+no false positives We have then performed three tests using
+the three models that were trained during the crossvalidation
+on the testing dataset Based on the results shown in Table
+VII Figure 7 and 9 we found that the overall performance
+of the models is outstanding In fact the trained models were
+able to generalize to data that they havent seen before and did
+not merely learn to model the training data In average the
+model has well predicted the normal behavior of packets in a
+sequence F1score 099 It is also able to predict the several
+ 
+Fig 9 ROC Curves and AUC values of each class of the Testing dataset
+TABLE VII
+RESULTS ON TESTING DATA
+Model Class Recall Precision F1Score
+1Normal 099 099 099
+Error on Event 098 093 095
+Error on Error 067 097 079
+Missing Response 081 088 084
+Missing Request 094 093 093
+2Normal 099 099 099
+Error on Event 1 093 096
+Error on Error 081 081 081
+Missing Response 079 079 079
+Missing Request 088 096 092
+3Normal 099 099 099
+Error on Event 098 098 098
+Error on Error 091 082 086
+Missing Response 078 084 081
+Missing Request 086 089 087
+other types of attack since F1score value varies between 08
+and 096 Moreover the models outstanding performance is
+depicted in Figure 9 since the ROC curves of each class
+are closer to the topleft corner and the AUC values for the
+different classes approach 1
+VIII L IMITATIONS
+Our main contribution in this paper is to prove that deep
+learning algorithms are suitable for detecting intrusions on
+SOMEIP protocol and classifying them Hence our developed
+intrusion detection system is considered as an attack classier
+rather than an anomaly detector However for future work
+we aim to develop an anomaly based IDS able to detect
+any type of abnormal behavior and which can be trained
+using unsupervised learning Furthermore the dataset used
+for developing the proposed IDS is synthetic and has been
+processed for ofine intrusion detection ie an intrusion is
+detected when the session between a client and a server ends
+However for future work we will be developing a intrusion
+detection system used for realtime detection and trained using
+an extracted dataset from real vehicle
+IX C ONCLUSION
+SOMEIP is an automotiveembedded communication pro
+tocol which enhances intercommunication between several
+ECUs In this paper we have proposed a deep learning basedIDS that can be leveraged to detect intrusions on SOMEIP au
+tomotive protocol We have generated a labeled dataset to train
+and evaluate the performance of our model in ofine mode and
+made it public for reproducibility Performance results show
+that the proposed models can be successfully implemented
+to detect multiple types of intrusions on SOMEIP protocol
+with very large F1Scores and AUC values bigger than 08
+for each class For future work we aim to create a SOMEIP
+packetbased dataset extracted from a real vehicle and test
+diverse unsupervised learning based IDS that can be deployed
+for detecting unknown intrusions in realtime
+REFERENCES
+1 Song Hyun Min Jiyoung Woo and Huy Kang Kim Invehicle network
+intrusion detection using deep convolutional neural network Vehicular
+Communications 21 2020 100198
+2 Chollet Franc ois and others httpskerasio
+3 Herold Nadine et al Anomaly detection for SOMEIP using complex
+event processing NOMS 20162016 IEEEIFIP Network Operations
+and Management Symposium IEEE 2016
+4 SOMEIP Generator Online Available httpsgithubcomEgomania
+SOMEIPGenerator
+5 Gehrmann Tobias and Paul Duplys Intrusion Detection for SOMEIP
+Challenges and Opportunities 2020 23rd Euromicro Conference on
+Digital System Design DSD IEEE 2020
+6 Iorio Marco et al Securing SOMEIP for InVehicle Service Protec
+tion IEEE Transactions on Vehicular Technology 6911 2020 13450
+13466
+7 Iorio Marco et al Protecting invehicle services Securityenabled
+SOMEIP middleware IEEE Vehicular Technology Magazine 153
+2020 7785
+8 Rumez Marcel et al An Overview of Automotive ServiceOriented
+Architectures and Implications for Security Countermeasures IEEE
+Access 8 2020 221852221870
+9 Lauser Timm Daniel Zelle and Christoph Krau Security Analysis
+of Automotive Protocols Computer Science in Cars Symposium 2020
+10 Gmiden Mabrouka Mohamed Hedi Gmiden and Hafedh Trabelsi An
+intrusion detection method for securing invehicle CAN bus 2016
+17th International Conference on Sciences and Techniques of Automatic
+Control and Computer Engineering STA IEEE 2016
+11 Rehman Abdul et al CANintelliIDS Detecting InVehicle Intrusion
+Attacks on a Controller Area Network using CNN and Attentionbased
+GRU IEEE Transactions on Network Science and Engineering 2021
+12 Seo Eunbi Hyun Min Song and Huy Kang Kim Gids Gan based
+intrusion detection system for invehicle network 2018 16th Annual
+Conference on Privacy Security and Trust PST IEEE 2018
+13 Han Mee Lan Byung Il Kwak and Huy Kang Kim Anomaly intrusion
+detection method for vehicular networks based on survival analysis
+Vehicular communications 14 2018 5263
+14 Kang MinJu and JeWon Kang A novel intrusion detection method
+using deep neural network for invehicle network security 2016 IEEE
+83rd Vehicular Technology Conference VTC Spring IEEE 2016
+15 Scalable serviceOriented MiddlewarE over IP SOMEIP Online
+Available httpssomeipcom
+ 
+16 Li Yuekang et al Ori A Greybox Fuzzer for SOMEIP Protocols
+in Automotive Ethernet 2020 27th AsiaPacic Software Engineering
+Conference APSEC IEEE 2020
+17 Busnelli Andrea Car Software 100M Lines of Code and Counting
+linkedin comaccessed 201585 2014
+18 Yin Chuanlong et al A deep learning approach for intrusion detection
+using recurrent neural networks Ieee Access 5 2017 2195421961
+19 Prabhu Archana H N Champa and Deepti Kalasapura Network
+Intrusion Detection Using Sequence Models 2019 Grace Hopper
+Celebration India GHCI IEEE 2019
+20 Hossain Md Delwar et al Long shortterm memorybased intrusion
+detection system for invehicle controller area network bus 2020
+IEEE 44th Annual Computers Software and Applications Conference
+COMPSAC IEEE 2020
+21 Matheus Kirsten and Thomas K onigseder Automotive ethernet Cam
+bridge University Press 2021
+22 MatheuJeong Seonghoon et al Convolutional neural networkbased
+intrusion detection system for A VTP streams in automotive Ethernet
+based networks Vehicular Communications 29 2021 100338
+23 Scapy Online Available httpsscapynet
+24 RNNbased IDS for SOMEIP Intrusion Detection httpsgithubcom
+AlkhatibnatashaSOMEIP IDS
+25 Huang W Song G Li M Hu W Xie K 2013 Adaptive Weight
+Optimization for Classication of Imbalanced Data In Sun C Fang
+F Zhou ZH Yang W Liu ZY  eds Intelligence Science and Big
+Data Engineering IScIDE 2013 Lecture Notes in Computer Science
+vol 8261 Springer Berlin Heidelberg
+ 

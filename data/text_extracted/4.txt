@@ -1,0 +1,1782 @@
+1
+Securing SOMEIP for In Vehicle
+Service Protection
+Marco Iorio Massimo Reineri Fulvio Risso Riccardo Sisto and Fulvio Valenza
+Abstract Although highspeed invehicle networks are being
+increasingly adopted by the industry to support emerging use
+cases previous research already demonstrated that car hacking
+is a real threat This paper formalizes a novel framework
+proposed to provide improved security to the emerging SOMEIP
+middleware without introducing at the same time limitations in
+the communication patterns available Most notably the entire
+trafc matrix is designed to be congured using simple high
+level rules clearly stating who can talk to whom according to
+the service abstraction adopted by SOMEIP Three incremental
+security levels are made available accounting for different
+services being associated with different requirements The core
+security protocol encompassing a session establishment phase
+followed by the transmission of secured SOMEIP messages
+has been formally veried to prove its correctness in terms
+of authentication and secrecy properties Performancewise in
+depth experimental evaluations conducted with an extended
+version of vsomeip conrmed the introduction of quite limited
+penalties compared to the bare unsecured implementation
+Index Terms SOMEIP Invehicle security SOA protection
+I I NTRODUCTION
+MODERN vehicles are running on code as much as on
+gasoline 1 2 Besides the electrication trend one
+of the core aspects of the 21stcentury automobile relates to
+the development of increasingly smarter and more complex
+applications to manage every single aspect of the vehicle and
+provide a richer onboard experience First most operations that
+used to be performed through mechanical linkages are nowa
+days managed by electronic systems and control algorithms
+according to the drivebywire paradigm Second Advanced
+Driving Assistance Systems ADAS are shifting the control
+of safetycritical systems such as braking and steering to
+computers algorithms and software 3 They aim to increase
+the overall safety by relieving the driver of tedious tasks
+reacting faster in case of emergency and preventing accidents
+caused by human errors Third the humanvehicle interface
+HMI design is currently being reinvented developing novel
+infotainment systems to provide more engaging interactions
+between driver passengers and vehicle 4
+To support an increasing number of functionalities com
+mon vehicles encompass tens of different Electronic Control
+Units ECUs ranging from lowend microcontrollers to high
+performance CPUbased systems 5 At the same time wirings
+and communication protocols constitute the backbone enabling
+the exchange of information between distributed applications
+Copyright c 2015 IEEE Personal use of this material is permitted However
+permission to use this material for any other purposes must be obtained from
+the IEEE by sending a request to pubspermissionsieeeorg
+M Iorio F Risso R Sisto and F Valenza are with the Politecnico di Torino
+DAUIN Torino Italy namesurnamepolitoit  M Reineri is with
+Italdesign Moncalieri Italy namesurnameitaldesignitAs for invehicle networks the most widespread standard is a
+broadcast messageoriented bus named Communication Area
+Network CAN bus 6 Remarkably it adopts a lossless
+bitwise arbitration method of contention resolution making it
+suitable for strong realtime applications
+Yet many emerging applications especially those from
+the comfort domain are progressively associated with higher
+bandwidth requirements eg to transmit video streams while
+partially relaxing the strict realtime constraints To this end
+Automotive Ethernet 7 a slightly modied version of the
+widespread standard designed to meet the invehicle EMC
+requirements is emerging prominently as a candidate to replace
+a plethora of complex proprietary technologies 8 9 At the
+same time the Service Oriented Architecture SOA paradigm
+is being increasingly adopted to meet the requirements for
+modularity dynamism and update capability According to
+this design pattern a system is composed of a set of services
+providing different functionalities either offered or consumed
+by the actual applications In this context SOMEIP 10 is
+a network middleware standardized in 2016 by AUTOSAR
+explicitly to fulll all the typical automotive use cases Most
+notably it provides an easytouse SOA abstraction on the top
+of traditional transport protocols such as TCP and UDP
+Nonetheless the SOMEIP specications completely lack
+security measures directly embedded in the protocol Although
+it has been designed to operate on the top of classical transport
+protocols theoretically enabling the usage of effective and
+mature security protocol suites such as IPSec and TLS they
+appear not to t well all the different automotive communication
+patterns thus introducing unwanted limitations to the middle
+ware IPSec for instance could be adopted to establish secured
+tunnels between different ECUs However being application
+unaware it would not guarantee the authentication of the differ
+ent parties involved in the communication TLS on the other
+hand does not support multicast communications leveraged by
+SOMEIP to limit transmissions on the communication medium
+when possible Moreover it is characterized by a fairly complex
+authentication handshake being a generalpurpose security
+protocol Yet during the last decade the research community
+has already clearly demonstrated the need for secure invehicle
+communication protocols Indeed multiple researchers have
+discovered a wide range of possible vulnerabilities concerning
+both ECUs software and invehicle networks especially the
+CAN bus being totally unsecured and given its relevance in
+the vehicular domain 11 allowing a possible attacker to take
+over the control of even safetycritical systems 1216 All
+in all this is a clear evidence that isolation and security through
+obscurity can no longer be assumed as sufcient protections
+This paper lls the identied gap by presenting a novel secu
+ 
+2
+rity framework designed to protect SOMEIP communications
+The core of our proposal in addition to providing complete
+compatibility with the communication middleware is based
+on two main pillars First the denition of simple highlevel
+authorization rules to specify the trafc matrix allowed in
+terms of services according to the SOA pattern adopted by
+SOMEIP Second the possibility to assign different security
+levels to different services depending on how critical they
+are Hence it allows to get the best compromise between
+security and overhead Starting from the highlevel ideas
+anticipated in 17 this paper presents the continuation of
+the above research work which led to a rigorous denition of
+the framework and of its security protocol Specically our
+main contributions are as follows i The formalization of the
+security protocol including the authorization mechanism and
+its formal verication to provide high assurance that the desired
+security properties hold ii An indepth presentation of the
+security framework architecture envisioned to protect SOMEIP
+communications discussing the automotive requirements and
+justifying the possible design choices iii The extensive
+experimental assessments of the overhead introduced by the
+security features carried out using automotivegrade evaluation
+boards running the developed PoC
+The remainder of the paper is organized as follows Section II
+reviews previous cyberattacks and existing solutions to protect
+invehicle networks Section III presents an overview of the
+system model increasingly adopted in modern vehicles with
+specic focus on the SOMEIP middleware Section IV presents
+the proposed security framework together with a discussion
+the security properties it can enforce Section V formalizes the
+security protocol designed to protect SOMEIP communications
+which is formally veried in Section VI Section VII outlines
+the advantages of our proposal compared to the usage of
+SOMEIP over a lower secure protocol while Section VIII
+presents its experimental evaluation Finally Section IX draws
+conclusions and proposes directions for further research
+II R ELATED WORK
+In this section we motivate the requirements for invehicle
+security presenting an overview of the main attacks perpetrated
+against vehicular networks Then we proceed with an overview
+of the possible solutions proposed by the research community
+A InVehicle Networks Attacks
+During the last decade multiple researchers have already
+analyzed the security of invehicle networks Yet their conclu
+sions are discouraging pointing out the existence of multiple
+vulnerabilities that could eventually enable a sufciently skilled
+attacker to take over the control of even safety critical systems
+In 2008 Hoppe et al 12 depicted four different attack
+scenarios that exploiting messages injected into the CAN
+network allowed the researchers to perform simple actions
+such as opening the window lift or hiding an incomplete
+repair Two years later Koscher et al 13 moved on and
+showed they could control the display of the speedometer
+kill the engine as well as affect braking by simply injecting
+messages into the CAN bus of a vehicle The researchreceived widespread criticism because people claimed there
+were no ways for an attacker to inject these types of messages
+without being close to the vehicle Nonetheless the same
+research group 14 succeeded in remotely performing similar
+attacks by exploiting interfaces such as the MP3 parser of the
+radio the Bluetooth stack and the telematics unit to get the
+code executed Finally in 2015 Miller and Valasek clearly
+demonstrated that remote car hacking of an unaltered vehicle
+was indeed possible 15 In a nutshell they leveraged a chain
+of serious vulnerabilities in applications and network stack
+implementations especially those from the comfort domain eg
+Bluetooth WiFi and 4G to remotely hack the infotainment
+system of a 2014 Jeep Cherokee Eventually they succeeded
+in remotely reprogramming the rmware of a microcontroller
+to forward messages to the CAN bus gaining the capability
+to perform a wide range of physical actions through a laptop
+wherever in the US In 2016 adopting a similar approach Nie
+et al 16 successfully implemented a remote attack on a Tesla
+Model S in both Parking and Driving mode
+B InVehicle Networks Security
+The security of invehicle networks has already been the topic
+of many studies Being almost ubiquitous the CAN bus has
+received widespread attention to increase the overall security
+and prevent malicious intrusions 1827 Using cryptography
+at the application layer is the most natural choice when it comes
+to protect network messages However due to the broadcast
+nature of the CAN bus as well as the computational constraints
+imposed by lowend ECUs most current approaches propose
+the usage of simple Message Authentication Codes MACs to
+authenticate the messages transmitted 20 26
+In this context the biggest challenge resides in the key
+provisioning phase Although public key cryptography is
+usually considered out of scope due to the excessive re
+quirements in terms of computational capacity 25 xed
+and statically assigned keys are not valuable either being
+very easy to compromise A possible solution to the key
+exchange problem involves shortterm keys released in a time
+dependent fashion as done by the Timed Efcient Stream Loss
+Tolerant Authentication TESLA protocol 28 Nonetheless
+this approach introduces a small delay between the reception of
+a message and the actual verication instant as well as requires
+the messages to be buffered Conversely other researchers
+proposed to move from pairwise keys to a groupbased
+approach In other words acknowledging the onetomany
+nature of the communication medium they suggested the usage
+of group keys depending on the trust level associated with each
+ECU 20 as well as the exploitation of an advanced MAC
+construction to mix the keys between groups of nodes 18
+Finally another subset of solutions leverages the physical
+properties of the signals transmitted on the CAN bus and
+the ECUs characteristics as unique patterns in the generation
+and exchange of the symmetric keys 24 27
+To remove the need for cryptography along with its
+associated complexity and overhead some researchers started
+exploiting the unique characteristics of CAN signals as an
+authentication mechanism In particular they showed it was
+ 
+3
+possible to obtain a ngerprint of the sender node by applying
+mathematical functions on the electrical signal characteris
+tics 19 as well as by measuring the clock drifts in the com
+munication 23 Although based on empirical measurements
+these approaches may provide a valuable solution to detect
+undesired modications to the CAN bus topology including
+the addition and the replacement of an ECU
+Acknowledging the typical usage of a centralized gateway to
+interconnect the different network technologies coexisting in a
+single vehicle Wolf et al 29 proposed in 2006 to leverage the
+gateway itself as a rewall to validate the messages exchanged
+In particular they argued the necessity to enforce rewall rules
+to prevent ECUs attached to lower restricted networks from
+sending messages into safetyrelevant bus systems such as
+CAN Nonetheless different attacks showed this protection
+alone not being sufcient given the high attack surface exposed
+by the gateway 15 16 Indeed the central gateway usually
+acts also as a terminator for the connections from and to the
+external world eg Bluetooth WiFi and 4G thus becoming
+a very easy target for an attacker Additionally although a
+rewall could provide isolation between different domains
+each subnetwork would still remain totally unprotected
+When it comes to invehicle Ethernetbased communications
+Hamad et al 30 proposed in 2017 a framework that aims to
+provide secure communications between ECUs by exploiting
+security policies to dene who should talk to whom Their
+solution is made up of two main building blocks First a
+framework used to build communication policies gradually
+throughout the design and lifecycle of the software component
+modelling trust relationships through a Public Key Infrastruc
+ture PKI Second a security module enforcing the policies
+in a distributed manner Nonetheless it requires the denition
+of lowlevel rules strongly limiting the dynamism introduced
+by SOAs Additionally the verication of lengthy chains of
+trust may impose an excessive burden at startup time
+The same year Zelle et al 31 studied the feasibility of using
+TLS to guarantee authentication and condentiality to Ethernet
+based invehicle communications In the end they concluded
+that TLS could meet most of the realworld performance
+requirements using typical automotive hardware especially
+when evaluating the actual runtime protection A single session
+establishment however took more than 2 sto complete rising
+many doubts whether it could be sustainable in case hundreds
+of connections needed to be established in parallel Additionally
+they only considered the exploitation of TLS to protect TCP
+communications while leaving the use of UDP and DTLS as a
+future work Indeed UDP appears to be the privileged transport
+protocol to be used in conjunction with SOMEIP being
+particularly lightweight Nonetheless as of today no standard
+version of DTLS does provide compatibility with multicast
+communications usually leveraged in vehicular networks
+III B ACKGROUND
+This section introduces the basic vehicular system archi
+tecture focusing on highperformance ECUs and presents
+the SOMEIP middleware its opensource implementation
+vsomeip  as well as an alternative solution DDSA System Model
+Typical vehicles consist of roughly 100 ECUs microcon
+trollers responsible for specic tasks such as engine control
+power train body control and so on Each functional ECU is
+directly attached to multiple sensors and actuators while their
+interconnection is realized through multiple CAN buses
+Yet emerging use cases including automated driving high
+speed onboard and vehicletovehicle V2V communication
+multimedia applications and continuous overtheair updates
+are pushing towards the socalled central server architec
+ture 32 According to this paradigm many different ECUs are
+replaced with few more complex devices usually consisting of
+a highperformance microprocessor complemented by multiple
+microcontrollers interconnected through highspeed Ethernet
+links Sensors and actuators can be attached directly to the
+network or through integration nodes becoming more and
+more ECU and vehicle independent
+To increase the interoperability between multiple devices
+and allow for a faster development of the applications the
+AUTOSAR consortium recently standardized Adaptive Plat
+form 33 which is becoming the de facto standard for high
+performance ECUs It seeks to provide a common middleware
+interface between applications and ECUs on top of POSIX
+compliant operating systems eg Linux PikeOS or QNX to
+enable the efcient usage of the underlying hardware resources
+and abstract the lowlevel details According to the traditional
+approach ie Classical AUTOSAR each application is
+statically assigned to a single ECU and the trafc matrix is
+dened at the time of conguration Conversely Adaptive
+AUTOSAR adopts a more exible solution leveraging the
+serviceoriented pattern to decouple the logical highlevel goals
+from the actual implementations and the network topology
+B SOMEIP
+Scalable serviceOriented MiddlewarE over IP SOMEIP is
+a communication middleware standardized by the AUTOSAR
+consortium as part of its effort to develop a futureproof on
+board architecture 10 To achieve isolation and modularity
+SOMEIP adopts a serviceoriented abstraction A service
+logically represents a business activity with a specied outcome
+accessible through a welldened interface In other words
+consumers perceive each service as a black box Services can
+be built upon other services as well as combined to provide
+more complex functionality Additionally different instances
+of the same service may coexist at the same time eg for
+redundancy purposes and reside on different ECUs as well as
+on the same device Finally service discovery functionalities
+are foreseen to advertise the availability of the different services
+and their associated network parameters 34
+SOMEIP provides two main communication models First
+requestresponse implementing classical Remote Procedure
+Calls RPC to invoke functions exposed by applications
+running on remote devices Second the publishsubscribe
+approach which is rather typical in automotive networks It
+decouples the sender from the recipients of the messages
+whenever an event occurs the corresponding service publishes
+a new notication applications willing to receive updates on
+ 
+4
+the other hand express their interest by subscribing to the
+event The actual messages are delivered seamlessly by the
+middleware which can leverage all the features offered by lower
+network layers eg multicast messages to save transmissions
+on the communication medium
+SOMEIP operates on the top of a transport protocol in
+charge of delivering the messages from the sender to the
+recipients Two main bindings are currently supported by the
+specications UDP and TCP Generally speaking UDP shall
+be the preferred binding introducing few overhead and being
+suitable also in case of hard latency requirements Additionally
+it supports multicast messages thus optimizing the network
+utilization On the other hand being a heavyweight protocol
+TCP is suggested only in case very large chunks of data need
+to be transported and no hard latency requirements in case of
+error exist Other transport mechanisms such as Network File
+System NFS or Automotive Pixel Link could be used if more
+suited for the specic use case As for message protection the
+SOMEIP standard does not integrate any security measures
+including authentication integrity and condentiality Instead
+they are delegated to the transport layer which may impose
+unwanted limitations and introduce excessive overhead
+C vsomeip
+Thevsomeip stack1is an opensource implementation of
+the SOMEIP specications In a nutshell the library provides
+all the functionalities required to abstract the communication
+between both local and remote applications including seri
+alization of message headers establishment of connections
+management of communication endpoints packets transmission
+and servicediscovery facilities In addition it exposes a public
+API to the application developers taking advantage of an
+eventloop abstraction as well as leverages conguration les
+to allow netuning a wide range of parameters
+The core of vsomeip resides in the concept of routing
+manager ie the entity responsible for the effective delivery
+of network messages Two different versions of the routing
+manager entity do coexist and are loaded transparently by the
+library at startup time
+routing manager  the fully functional version of the
+module adopted by a single application for each physical
+ECU It acts as a gateway in charge of the communication
+with applications residing on remote devices In other
+words this is the only instance establishing external
+network connections and managing the transport endpoints
+ie UDP and TCP sockets Finally it takes care of
+loading the service discovery module and internally
+propagating the information received
+routing manager proxy  loaded by all the other instances
+and capable of local communications only ie imple
+mented through Unix domain sockets Hence messages
+addressed to remote recipients are rst transmitted to
+the main routing manager which forwards them to the
+intended destination There the inverse process may
+need to be executed Service messages are continuously
+1httpsgithubcomGENIVIvsomeipexchanged between the proxies and the master instance
+to share the knowledge on offered and requested services
+and to allow the delivery of notications
+As for security vsomeip can optionally leverage Unix
+credentials to authenticate local connections However the
+total lack of protection regarding network messages as well
+as the usage of unauthenticated conguration les restrict the
+usability of this solution to a rather limited niche of use cases
+D DDS
+Data Distribution Service DDS 35 is a datacentric
+communication middleware based on the publishsubscribe
+pattern and standardized by the Object Management Group
+OMG in 2004 the latest version 14 was released in 2015
+It targets distributed realtime systems in the industrial IoT
+domain and it is currently adopted in many verticals including
+transportation energy medical systems industrial automation
+aerospace and defence2At its core DDS is based on topics
+an abstraction associating a unique name and a data type to
+the actual data writers publish content in a topic that readers
+can subscribe to getting notied of its availability Each topic
+can be assigned a set of Quality of Service QoS descriptors
+to characterize reliability security and storage requirements
+Additionally dynamic discovery functionalities are featured
+to enable plugandplay DDS applications Finally although
+strongly oriented towards publishsubscribe communication
+in 2017 the DDS specications were extended to implement
+classical RPC on top of its basic building blocks 36
+To exchange the actual information on the network DDS
+leverages a custom wire protocol named RealTime Publish
+Subscribe RTPS 37 It introduces an abstraction layer
+implementing transportagnostic reliability and fragmentation
+features on top of classical protocols such as TCP and UDP
+hence providing reliable channels even on top of connection
+less and multicast IP communications The DDS approach to
+security is also transportagnostic being based on an extension
+of the RTPS capabilities 38 In a nutshell it aims to enforce
+authentication and authorization of DDS readers and writers
+as well as integrity and condentiality of the data exchanged
+DDS appears to a be viable alternative for the automotive
+domain and it is also characterized by some benets over
+SOMEIP QoS management and security among all To this
+end although the AUTOSAR aracom communication
+management API designed as part of the Adaptive Platform
+was initially modeled around SOMEIP concepts ie methods
+events and elds as well as its service discovery protocol
+the support for DDS has been introduced in newer versions
+Yet SOMEIP still appears to hold a privileged position in the
+automotive domain thanks to its support for simpler ECUs
+running Classic AUTOSAR as well as its tighter integration
+within the AUTOSAR framework For these reasons we believe
+an improvement in the SOMEIP security to be of paramount
+importance and in the remainder of the discussion we will
+focus explicitly on this middleware while leaving a complete
+comparison between the two solutions as a future work
+2httpswwwddsfoundationorgwhoisusingdds2
+ 
+5
+IV S ECURING SOMEIP
+This section presents the key characteristics of our security
+framework which mainly consists of a twophase security
+protocol meant to provide improved security to SOMEIP It is
+composed of an initial session establishment phase performed
+at startup time between each application interested in accessing
+a SOMEIP service and the corresponding offerer Asymmetric
+cryptography is leveraged to ensure that only authorized
+parties can start the communication as well as to exchange
+the data necessary for the subsequent protection Once the
+session establishment correctly completed the actual runtime
+protection can take place Symmetric cryptography is adopted
+to enforce the efcient exchange of secured SOMEIP messages
+according to the security level selected in the previous phase
+Our solution was driven by the desire to achieve complete
+compatibility with the communication middleware avoiding
+to introduce any limitations that may constraint the dynamism
+typical of SOMEIP First security features shall be as much
+transparent as possible from the applications point of view
+In other words the denition of the permitted trafc matrix
+shall be performed by means of highlevel authorization rules
+ie in terms of services without having to deepen the
+network parameters abstracted by the middleware Second
+the protection shall be compatible with all the communication
+models supported by SOMEIP regardless of the transport
+protocol adopted for the actual delivery of the messages In
+particular it shall transparently cope with both onetoone ie
+unicast and onetomany ie multicast transmissions the
+latter being exploited for the efcient delivery of notications
+The remainder of this section is organized as follows We
+start delineating the adversary model assumed for the rest of the
+discussion Then we outline the most noteworthy characteristics
+of the security framework focusing on the granularity adopted
+and motivating the available security levels Additionally we
+discuss the methodology proposed to express at a high level the
+authorization rules as well as the strategy selected to secure
+multicast messages Finally Section V formally describes the
+actual security protocol proposed to secure SOMEIP messages
+A Threat model
+In this work we assume the adversary may have full
+control over the Ethernet network being able to insert replay
+eavesdrop modify and drop arbitrary messages Yet we do
+not consider DenialofService DoS attacks leaving their
+protection as future work As for cryptography we assume the
+adversary has bounded computational power Specically he is
+assumed to be unable to subvert widely adopted cryptographic
+functions or break sufciently long secrets by brute force
+For the purpose of our analysis it is not relevant how the
+attacker obtained its access eg through software compromise
+or by connecting a physical device to the invehicle network
+for tuning reasons or by a dishonest repair shop Nonetheless
+we recognize that ECUs are completely accessible by possible
+hackers who can study and practice multiple attacks on their
+own vehicles before moving to the actual targets Hence to
+achieve a sufcient level of protection we suppose each ECU
+is equipped with a hardware secure storage preventing anattacker to access the cryptographic material At minimum the
+secure storage shall securely store and bind each private key
+to a specic application as well as guarantee the integrity of
+critical les eg the root digital certicate Yet the usage
+of hardware security modules in the automotive industry has
+already been envisioned quite a long time ago 39
+B Security Granularity
+Compatibly with the serviceoriented paradigm adopted by
+SOMEIP our security framework operates at service instance
+granularity In other words every instance of a SOMEIP
+service is an atomic entity which from the security point
+of view every application is either allowed or denied access
+to This granularity level originates as a tradeoff between
+strong isolation pushing towards a very ne discrimination
+and the constrained resources available in vehicular networks
+Yet it is deemed not to introduce any particular limitations
+First services represent just a logical abstraction on the top of
+the applications implementing the actual functionalities ie
+multiple services can be provided by the same application
+Hence the security granularity ultimately depends on the
+architectural choices made by the designers in charge of
+deciding what to call a service Second services should
+inherently group together closely related operations intuitively
+associated with also similar security constraints and accessible
+by the same requesters Yet it might be reasonable to divide
+the functions only returning pieces of information ie getters
+and events from those modifying the environment the latter
+being possibly restricted to a narrower group of users
+C Security Levels
+Different services may be associated with different require
+ments in terms of security depending on the functionalities
+they provide and the corresponding degree of criticality
+Accounting for multiple use cases our framework provides
+three incremental security levels namely nosec authentication
+andcondentiality  They can be independently assigned to each
+instance of a service to achieve the best trade off between
+protection and overhead
+1 Nosec it is the simplest security level merely corre
+sponding to vanilla SOMEIP Albeit not providing any security
+property it may be suitable for very simple use cases since it
+introduces no additional communication overhead Additionally
+it ensures full compatibility with legacy applications imposing
+no modications to the message format
+2 Authentication it provides data authentication and in
+tegrity Specically it ensures that the middleware processes
+only messages originating from a legitimate source ie
+authentication and authorization given they have not been
+modied while owing through the network ie integrity
+Additionally this security level provides replay protection In
+other words it identies and drops duplicate packets preventing
+an attacker from capturing valid messages to subsequently
+retransmit them and trigger multiple times the same action
+as well as cause application crashes Intuitively the security
+properties enforced by the authentication level are of the highest
+importance whenever a communication takes place Yet they
+ 
+6
+are even more imperative in a vehicular network being cars
+safetycritical systems The higher the level of automation the
+more serious the potential effects in the automated driving
+era companies might be considered liable in case of incidents
+caused by malfunctioning software
+3 Condentiality it ensures authentication authorization
+integrity and condentiality as well as replay protection In
+other words it includes all the security properties introduced
+by the authentication level complemented by encryption to
+prevent a possible attacker from accessing the contents of the
+messages transmitted across the network ie providing data
+condentiality Different use cases may justify the introduction
+of data condentiality First invehicle networks are no longer
+conned to sensor data Indeed GPS positioning advanced
+infotainment systems as well as the interconnection with
+personal devices eg smartphones produce a great amount of
+valuable data possibly revealing privacysensitive information
+about the driver and the passengers For instance a very simple
+device may be able to track all the movements of a vehicle
+simply eavesdropping the periodic messages advertised by the
+navigation system Additionally car manufacturers may be
+interested in ensuring data condentiality to prevent industrial
+espionage Indeed network messages may provide important
+hints to reconstruct the logic of complex and possibly distinctive
+systems especially those related to perception and automated
+driving Finally encryption might be leveraged to forbid
+nonauthorized aftermarket ECUs from reading the messages
+exchanged between the other devices Hence it provides a way
+to selectively limit their ability to grab external information
+D Expressing the Trafc Matrix
+One of the most distinctive aspects of our security framework
+resides in the usage of simple highlevel authorization policies
+to express the permitted trafc matrix ie the set of connections
+that are allowed to be established by the middleware Sticking
+to the SOMEIP jargon we delineate the conceptual format of
+each independent authorization rule as the 5tuple
+fappsrvinstrolemin SLg 1
+where
+app identies the application to which the rule applies
+srvpoints out the SOMEIP service the rule refers to
+inst species either an explicit instance of srvto which
+the rule applies or contains a wildcard to extend its
+validity to any instance
+role denes the role app can assume for the considered
+service instance among offer ie implement the interface
+dened by the service and request ie consume the
+functionalities exposed by the service the offerer of a
+service instance is automatically allowed to request it
+minSLstates the minimum security level among nosec 
+authentication andcondentiality  the application requires
+to be enforced when accessing the service instance
+In other words each policy states that an application app
+is authorized to access a specic service instance fsrvinstg
+with a given role ie offer or request granted that its security
+level is at least minSL An unbounded number of rules can becombined ending up dening the entire set of communications
+that can occur between the applications hosted in a vehicle
+ie a whitelisting approach is adopted
+Being the session establishment phase carried out by means
+of asymmetric cryptography each application is required to be
+associated with a private key sealed within the secure storage
+and a digital certicate embedding the corresponding public
+key Digital certicates need to be signed to guarantee the
+authenticity and integrity of their content according to a chain
+of certication Without loss of generality in the following we
+consider a simplied chain composed by no intermediate levels
+between the leaves and the trusted root Yet to achieve the best
+degree of security we suggest using a different root certicate
+for each vehicle Thus even if an attacker eventually succeeds
+in obtaining a valid private key eg by violating the secure
+storage of an ECU he can leverage it only on the original
+device being the corresponding certicate recognized as invalid
+by all the other vehicles Certicate revocation is currently
+considered a critical task in the vehicular domain due to the
+requirements for an Internet access and the rapidly growing size
+associated with CRLs Hence pervehicle certicates required
+to be periodically renewed are deemed to represent a good
+compromise between security and complexity
+In light of this we propose to leverage the digital certicates
+themselves as trustworthy anchors to express the set of services
+each application is authorized to access In particular in the
+following we delineate two possible alternatives highlighting
+the most relevant differences between them
+1 Centralized approach each digital certicate binds a
+public key to the identier of the application it is associated
+to Then a centralized repository available on each vehicle is
+leveraged to store the entire set of relevant authorization rules
+according to the format dened by 1 where appcorresponds
+to the identier contained in a certicate Additionally a digital
+signature enforces the authenticity and integrity of the rule
+set to detect any possible tampering attempts Whenever a
+new secure connection has to be established the framework
+performs two lookups in the repository to verify whether both
+parties are authorized to participate in the communication
+According to this solution each vehicle is characterized by a
+single source of trust stating the entire trafc matrix Still the
+repository might be replicated on every ECU to simplify its
+secure access and limit the communication latency Nonetheless
+whenever eg a new application is installed or an update
+involves a modication in the rule set the entire repository
+needs to be rebuilt signed by the car manufacturer and stored on
+the target vehicle possibly introducing a quite high overhead
+2 Distributed approach each digital certicate directly
+binds a public key to the rule set associated with that specic
+application Technically speaking with reference to the X509
+standard we propose to store each authorization rule as a
+Subject Alternative Name SAN adopting a URIlike format
+someip  srvinst roleminSL 2
+where someip is a keyword characterizing the type of entry
+andapp is implied by the owner of the private key associated
+with the certicate Although having no longer a central
+repository containing the entire set of rules the distributed
+ 
+7
+approach is characterized by a few advantages over a centralized
+solution i The framework does not need to perform any
+table lookup when establishing the connection being all the
+required pieces of information contained by the certicates it
+is presented to ii Installing or updating an application does
+not require to regenerate the entire rule set but only to issue a
+new digital certicate containing the updated rules relevant for
+that application Indeed the authorizations associated with all
+the other applications still remain valid as they are bounded to
+SOMEIP services and do not imply the identity of the actual
+counterpart As a practical example lets suppose an upgrade
+is installed in a vehicle introducing a new rearview camera
+and its companion application This application is authorized to
+offer an rwcstream service to transmit the video stream as well
+as to send alerts to a collisionalert service signaling possible
+upcoming dangers Assuming the central dashboard was already
+offering the collisionalert service to receive alerts from other
+sources it will transparently get notications from the new
+application too being the access compatible with its digital
+certicate Conversely if no support was provided to read
+data from the rwcstream service the displaying application
+would require an update to introduce this capability as well
+as to regenerate its digital certicate accordingly Long story
+short the car manufacturer is required to issue an updated
+digital certicate only when the corresponding application
+is also updated iii Certicates can be leveraged by car
+makers as a sort of contract to certify that a given application
+optionally developed by a thirdparty is authorized to request
+andor offer a predetermined set of service instances Thanks
+to the increased modularity and dynamism we will stick to the
+distributed approach for the rest of the discussion Nonetheless
+in case deemed appropriate the security framework could be
+trivially adapted to support the centralized solution
+E Symmetric Keys Granularity
+Generally speaking SOMEIP service instances are asso
+ciated with a one offerer many requesters topology They
+possibly encompass unicast interactions between each separate
+requester and the single offerer as well as group notications
+transmitted by the provider to a subset of the requesters With
+that in mind the security framework needs to be compatible
+with both unicast and multicast messages in order not to
+impose any limitations on the SOMEIP middleware
+Runtime messages protection has been designed to be ef
+ciently provided by means of symmetric cryptography Hence
+two possible alternatives open up regarding the granularity
+of the symmetric keys associated with each service instance
+First the framework may leverage a different symmetric key
+between the offerer and each requester to secure the direct
+communications An additional key should then be shared
+among all the applications accessing the service instance to
+cope with multicast trafc optionally to increase even further
+the granularity different keys might be used for different
+events Second a single symmetric key could be leveraged
+to secure both unicast and multicast messages associated with
+a specic service instance The former alternative should
+provide a higher level of security guaranteeing a oneto
+one authentication of unicast messages and preventing directinteractions between different requesters Nonetheless a ma
+licious requester could anyway easily compromise the entire
+service directly triggering unwanted actions or transmitting
+counterfeit notications Hence as a tradeoff between security
+and complexity we adopted the second approach providing
+a grouplevel protection Symmetric keys are automatically
+generated by the framework every time a new service instance
+is started Thus each key is deemed to be used for a limited
+time signicantly reducing the possibilities for a successful
+attack Yet a rekeying mechanism might be required in case of
+longrunning services according to a wellestablished practice
+V S ECURITY PROTOCOL
+This section presents in great detail the security protocol at
+the core of our solution characterized by an initial handshake
+phase for session establishment followed by the transmission
+of secured messages After an initial set of denitions we
+proceed with a formal description of the security protocol
+laying the foundations for the subsequent formal verication
+The protocol will be described at symbolic level ie
+abstracting away some details of the cryptographic operations
+used eg the specic cryptographic algorithms or the key
+lengths This description is enough for the formal verication
+of the protocol logic according to the DolevYao approach 40
+A Preliminaries
+In the following we dene the terminology adopted to
+formalize the security protocol herein presented For the sake
+of clarity and without loss of generality we temporarily
+assume the existence of a single service instance to be
+secured identied by the pair fsrvxinst xg Yet the protection
+can be trivially extended to the realistic case of multiple
+service instances coexisting in the same system Let Abe
+the single application authorized to offer fsrvxinst xg while
+fBig8i21n represents the set of requesters interested
+in accessing the given service instance for some n1
+Additionally let us assume Abeing associated with a private
+keyskAand a digital certicate certA embedding both the
+corresponding public key pkAand an authorization policy A
+specied according to 2 for a given minimum security level
+Aamong nosec authentication andcondentiality 
+Afsomeip srvxinstxofferAg 3
+Similarly let each requester Bibe linked to a private key skBi
+and the related digital certicate certBifpkBiBig with
+Bifsomeip srvxinstxrequest Big 4
+Additionally let certRidentify the root certicate Finally
+for a given service instance a security level slis said to be
+acceptable by an application if and only if sl whereis
+the minimum security level stated in the authorization policy 
+For instance if AstatesAauthentication  then both
+authentication andcondentiality levels would be acceptable
+forA Conversely nosec would not
+ 
+8
+Algorithm 1 Session establishment Offerer A
+Requiresrvxinst xskAcert Acert R
+1A getpolicy certAsrv xinst x
+2sl securitylevel Auserconguration 
+3srvkey rndkey 
+4peerid 1
+5loop
+6 inRequestfsrv
+xinst
+xncert Big
+7 iffsrv
+xinst
+xg6fsrvxinst xgor
+8 notverifycert certBicert Rthen
+9 abort
+10 end if
+11Bi getpolicy certBisrv xinst x
+12 if not verifypolicy Birequestslthen
+13 abort
+14 end if
+15pkBi getpubkey certBi
+16enckey aenc srvkeypk Bi
+17response srvxinst xncert Apeeridslenckey
+18signature signresponsesk A
+19 outResponsefresponsesignature g
+20peerid peerid  1
+21end loop
+B Session Establishment
+The rst pillar characterizing the security protocol proposed
+to protect SOMEIP communications consists of message
+handshakes to establish the secure sessions A handshake
+is transparently carried out by the framework between each
+application willing to access a specic service instance and
+the corresponding offerer Indeed although secure sessions
+operate at group level to account for onetomany communica
+tions each handshake is a onetoone authentication process
+performed independently between the application A offering
+fsrvxinst xg and each requester Bi8i21nien
+separate handshakes are performed by the framework at start
+up The entire handshake process is repeated for each unique
+service instance regardless of whether more instances are
+offered by the same or by different applications
+The session establishment phase serves two main purposes
+The rst purpose is to perform a mutual authentication
+and to ensure that each application accesses only service
+instances complying with the authorization policies stated by its
+corresponding digital certicate More precisely the framework
+automatically enforces the role associated with the application
+ie offer orrequest  and veries whether the current security
+level of the service instance ie the one decided by the
+offerer as detailed in the following is acceptable  In order to
+get the offerers authentication the offerer digitally signs its
+handshake response with its own private key and the requester
+veries this signature The requester on the other hand gets
+authenticated implicitly since it needs its private key to decipher
+and retrieve the symmetric key used for the subsequent run
+time protection The second purpose of the handshake is to
+share the session parameters between offerer and requester
+including the symmetric key transmitted in encrypted form
+Algorithms 1 and 2 formalize respectively the operations
+performed by the framework on behalf of the offerer Aand
+a requester Bito establish a secure session Each algorithm
+assumes to receive in input the service instance for which
+the handshake is to be performed ie fsrvxinst xg theAlgorithm 2 Session establishment Requester Bi
+Requiresrvxinst xskBicert Bicert R
+1n nonce 
+2outRequestfsrvxinst xncert Big
+3inResponsefresponsesignature g
+4srv
+xinst
+xncert Apeeridslenckey  response
+5B getpolicy certBsrv xinst x
+6iffsrv
+xinst
+xg6fsrvxinst xgorn6nor
+7 notverifypolicy Brequestslor
+8 notverifycert certAcert Rthen
+9 abort
+10end if
+11A getpolicy certAsrv xinst x
+12if not verifypolicy Aofferslthen
+13 abort
+14end if
+15pkA getpubkey certA
+16if not verifysignature signaturepk Athen
+17 abort
+18end if
+19srvkey adec enckeysk Bi
+20returnsrvkeypeerid
+private key and the digital certicate associated with the current
+application as well as the root certicate certR
+Focusing initially on the offerer upon startup the frame
+work selects a security level  slA to be associated
+with the service instance compatibly with the corresponding
+authorization policy Aand optionally depending on a user
+dened conguration granted that it is acceptable  Indeed
+an application developer may desire to select a security level
+higher than A in order to make it acceptable by a wider
+range of requesters Additionally the framework generates
+a new random symmetric key  srvkey  to be adopted for
+the runtime protection of fsrvxinst xg Indeed sticking to
+group protection most security parameters eg security levels
+and cryptographic algorithms need to be shared by all the
+applications accessing the same service instance Hence they
+are decided by the offerer and communicated to the other
+members during the session establishment phase
+Once initialization is terminated the offerer is ready to accept
+authentication requests as represented by the innite loop at
+lines 521 The actual session establishment is started by the
+requester which initially generates a new random nonce n
+leveraged to associate each request to the corresponding
+response and prevent message replay Then it builds up the
+authentication request message identifying the target service
+instance and containing the digital certicate associated with
+the requester Upon reception the offerer performs some sanity
+checks veries the validity of the digital certicate and the
+fulllment of the authorization policy Bi In particular it
+ensures that Biis authorized to access fsrvxinst xgas a
+requester as well as that the security level slisacceptable
+according to Bi In other words it prevents an application from
+accessing a service instance less secure than required In case
+an inconsistency is identied during any step the handshake
+is immediately aborted If all checks pass the framework
+leverages asymmetric cryptography to encrypt the symmetric
+key with the public key extracted from the digital certicate
+of the requester lines 1516 Hence only the owner of the
+corresponding private key would be able to decipher it The
+ 
+9
+SOMEIP header
+VersionAsymmetric
+Algorithm IDMessage Digest
+Algorithm IDUnused
+Nonce  n
+Certicate Fingerprint  certAorcertBiAuth Request
+
+
+Security
+Level IDSymmetric
+Algorithm IDPeer ID  peerid 
+Encrypted Key Length
+Encrypted Symmetric Key  enckey 
+Signature Length
+Digital Signature  signature 
+
+Auth Response
+Fig 1 Onwire format of the SOMEIP messages exchanged during the
+session establishment phase the request encompasses the elds up to Certicate
+Fingerprint  while the response includes all the elements presented
+response message is then constructed mainly including the
+nonce copied from the request the certicate of the offerer
+the encrypted key the security level selected by the offerer
+and an identier  peerid  uniquely assigned to each requester
+the offerer has peerid  0 Finally the response is digitally
+signed with the private key skAof the offerer line 18 to
+ensure its authenticity and integrity In the end the message is
+sent back to the requester
+Once the response is received the requester performs again a
+set of checks verifying whether the security level slselected by
+the offerer is acceptable according its own authorization policy
+B and ensuring the validity of certA Additionally it extracts
+the offerers authorization policy Ato make sure Ahasrole
+equal to offer andslisacceptable for the offerer Indeed no
+legitimate requester would access fsrvxinst xgifsl   A
+to prevent an offerer from violating its constraints Then the
+digital signature is veried by means of the public key extracted
+fromcertA explicitly authenticating Aline 16 In case of
+successful outcome the framework can proceed deciphering
+enckey by means of its private key line 19 Hence the
+requester nally obtained the symmetric key leveraged to secure
+runtime messages No conrmation is sent to the offerer thus
+achieving an implicit authentication Nonetheless a malicious
+application would not own the correct private key skBi
+effectively being prevented from decrypting the symmetric
+key and participating in the subsequent communication
+The session establishment phase is transparently executed
+by the security framework on behalf of the actual applications
+which are notied of the availability of a service instance only
+after successfully completing the entire process Indeed the
+SOMEIP middleware is exploited for the efcient delivery of
+the handshake messages by leveraging the requestresponse
+pattern Fig 1 graphically depicts the onwire format of
+the messages exchanged during the session establishment
+phase including all the pieces of information considered in
+Algorithms 1 and 2 as well as a set of identiers concerning the
+request
+generatedrequest
+sentresponse
+received
+session
+establishedresponse
+not
+receivedhandshake
+abortedsend auth
+requestreceive auth
+response
+valid
+responseinvalid
+responsetimeout
+repeat nrepeatnFig 2 State machine representing the session establishment process performed
+by a requester Bi accounting for possible message losses
+actual cryptographic algorithms leveraged for the handshake
+For the sake of efciency digital certicates are assumed to be
+replicated on every physical ECU when each application is ini
+tially deployed Hence during the handshake process they are
+identied by a ngerprint a unique identier obtained applying
+a cryptographic hash function Nonetheless this assumption
+may raise concerns in case of small and resourceconstrained
+devices with limited storage capabilities as well as for the
+additional complexity introduced during the update process
+In the rst case a centralized certicate repository might be
+leveraged to relax the storage requirements complemented
+by a helper SOMEIP service exposing an interface for their
+retrieval and a caching mechanism to limit the overhead of
+the session establishment Additionally automatic mechanisms
+could be devised to transparently replicate the certicates on the
+different ECUs whenever the central repository is modied thus
+greatly simplifying the update process Finally the handshake
+is designed to be agnostic about the transport protocol selected
+by SOMEIP adopting an automatic retransmission mechanism
+to face message losses To this end the complete state machine
+depicting the different states that the requester can assume
+during the process is shown in Fig 2
+C RunTime Message Protection
+As soon as at least one requester Bisuccessfully completed
+the authentication handshake the transmission of secured
+SOMEIP messages can start involving both direct interactions
+and event notications Nonetheless other session establish
+ments might be carried out in parallel at any time gradually
+granting access to a wider set of requesters Depending on the
+security level characterizing the service instance considered
+a different family of symmetric cryptography algorithms is
+leveraged to secure the messages Yet if a service instance
+is operated at nosec security level unmodied messages are
+simply transmitted by the framework in order to achieve full
+compatibility with applications built on top of vanilla SOMEIP
+In detail the authentication and integrity of authentication 
+level messages both the SOMEIP header and the actual
+payload is guaranteed by a Message Authentication Code
+MAC appended at the end of each SOMEIP packet Service
+instances operating at condentiality level on the other hand
+are secured leveraging an Authenticated Encryption with
+Associated Data AEAD algorithm It combines in a single
+interface both the MAC computation and the encryption of the
+payload containing sensible information securely exploiting
+ 
+10
+SOMEIP
+HeaderSOMEIP
+PayloadSupport
+DataMACAuthenticated
+Encrypted
+Fig 3 Highlevel format of a secured SOMEIP message
+the same symmetric key In case the security level is different
+from nosec  a sequence number snfpeeridseqg composed
+of the peer identier and a monotonic counter is appended to
+each message to detect possible replay attempts its integrity is
+effectively guaranteed by means of the MAC Accounting for
+message losses and reordering typical of unreliable transport
+protocols eg UDP we adopted a sliding window technique
+similar to the one used by Datagram Transport Layer Security
+DTLS 41 In particular it records the last subset of sequence
+numbers already received to discard the duplicates Additionally
+the sequence number is also leveraged as an initialization
+vector adopted by the cryptographic algorithms to introduce a
+bit of randomness in the computation Yet some algorithms
+specically require a completely random seed in those cases
+a random value would need to be generated and appended to
+every secured SOMEIP packet
+The highlevel format of a secured message is depicted in
+Fig 3 Most notably it encompasses two main elements in addi
+tion to vanilla SOMEIP packets First Support Data  including
+the sequence number the initialization vector if different from
+the sequence number and any other additional information
+Second MAC  corresponding to the output returned by the
+cryptographic algorithm and leveraged to ensure the authenticity
+and integrity of the entire SOMEIP message Accounting for
+the constraints imposed by the SOMEIP standard on extensions
+the two additional elds shall not exceed 56 bytes in total
+VI F ORMAL VERIFICATION
+This section presents the main aspects of the formal
+verication we performed to validate the security protocol
+herein proposed We start with a brief overview about why
+formal verication is adopted before presenting the main
+modelling choices Finally we conclude discussing the security
+properties formally veried and outlining the results obtained
+A Overview
+Formal verication is a technique used to thoroughly analyze
+communication protocols To this end we leveraged it to verify
+the absence of logical aws in our security protocol ie to
+prove that no attacks are possible under certain modeling
+assumptions In our analysis we exploited the DolevYao formal
+modeling technique and Proverif 42 an automatic crypto
+graphic protocol verier based on this technique According to
+this approach the attacker which is automatically modeled by
+the tool has complete control over the communication channel
+Additionally cryptography is considered ideal focusing on
+the conceptual properties while abstracting away the lowlevel
+details of the actual algorithmsPractically speaking to use Proverif it is necessary to
+formally express the cryptographic primitives adopted as well
+as the behavior of the trusted actors of the protocol by means of
+extended pi calculus Then the security properties eg secrecy
+and authentication to be formally veried can be specied
+by means of queries Sticking to an abstract approach we
+decided not to model the three different security levels Indeed
+being the security level at which a service instance operates
+autonomously selected by the offerer depending on its security
+policy a DolevYao attacker would have no meaningful ways
+to force a downgrade Therefore we modeled the properties
+associated with the condentiality level in order to verify the
+effectiveness of all the considered security guarantees In the
+following we present the most relevant aspects concerning the
+formal verication performed to prove the correctness of the
+security protocol proposed Yet the complete model expressed
+in extended pi calculus is publicly available on GitHub3
+B Modeling Cryptography
+According to standard practice we modeled the highlevel
+operations associated with both symmetric and asymmetric en
+cryption as well as digital signatures Most notably depending
+on how rewrite rules work the former corresponds to authen
+ticated encryption since decryption fails in case of tampered
+messages Additionally we introduced initialization vectors to
+make two identical encrypted payloads indistinguishable by
+an attacker Concerning digital certicates we modeled them
+as a container binding together a public key the identier of
+a service instances are omitted for the sake of simplicity
+and a role among offer andrequest  Certicate issuance is
+implemented through a private function ie executable only
+by trusted entities to model the impossibility for an attacker to
+forge digital certicates Finally random nonces and counters
+are represented in Proverif by fresh values  ie values that are
+initially unknown and unguessable by an attacker
+C Trusted Protocol Actors
+As attackers are automatically modeled by Proverif we
+created two different processes to model the legitimate actors
+They represent the behavior of the offerer and the requester
+during the session establishment phase according to Algo
+rithms 1 and 2 Additionally we also modeled a simple runtime
+communication necessary to express certain security queries
+eg verify whether the requester correctly deciphered the
+symmetric key corresponding to client authentication In a
+nutshell the requester encrypts a message using the symmetric
+key previously exchanged and a fresh initialization vector sends
+it to the offerer that tries to decrypt it Finally a third process
+performs initialization tasks ie creates the private keys and
+issues the digital certicates associated with the legitimate
+parties Moreover it generates a valid private key and digital
+certicate stating a different service and makes it available
+to the attacker Hence Proverif can verify that a given entity
+cannot access a specic service even if he has access to a
+different one In the end the initializer starts the execution of
+an unbounded number of offerers and requesters in parallel
+3httpsgithubcomnetgrouppolitosecurevsomeip
+ 
+11
+D Security Properties
+Concerning the queries formally veried by Proverif we
+expressed the following i Secrecy of srvkey  the sym
+metric key adopted for the runtime protection cannot be
+obtained or derived by the attacker ii Server authentication
+an attacker cannot impersonate the offerer without being
+detected by the requester In other words if a requester
+believes to have completed a server authentication with a
+given entity ie event endoffauth is triggered then
+the corresponding offerer must have actually started it ie
+event beginoffauth must have been previously exe
+cuted Specically the tool veries the injective correspon
+dence between the two events to require that each occur
+rence of the former corresponds to a distinct occurrence
+of the latter iii Client authentication an attacker cannot
+impersonate the requester and obtain srvkey  This query
+is modeled with an injective correspondence if the offerer
+received a valid runtime message ie event endreqauth
+is executed then a legitimate requester must have sent it
+ie event beginreqauth must have been previously
+triggered Otherwise an attacker would have obtained srvkey
+and he would be able to send messages without being detected
+iv Observational equivalence an attacker cannot distinguish
+between a legitimate message and a random message once
+encrypted In other words given two encrypted payloads the
+attacker cannot discern whether they refer to the same content
+This property is veried using the choice construct in Proverif
+Yet a positive outcome is achieved only in case symmetric
+cryptography is modeled explicitly adopting an initialization
+vector to introduce some randomness as in actual algorithms
+Conversely a simpler model neglecting it makes the verication
+fail demonstrating that an attacker would be able to recognize
+two identical payloads
+VII D ISCUSSION
+In this section we discuss the most relevant advantages
+of our solution with respect to the direct usage of SOMEIP
+encapsulated within a lower secure protocol eg IPSec or
+TLSDTLS Although most of the comparison refers strictly to
+the characteristics associated with the SOMEIP specications
+some arguments concern the compatibility with vsomeip  Yet
+to the best of our knowledge the GENIVI stack is the only
+opensource SOMEIP implementation currently available thus
+being denitely worth of investigation
+The comparison focuses on the following aspects i Service
+awareness whether the security framework can discern between
+different services to guarantee the authentication of the parties
+involved in the communication ii Multicast support the
+ability of a solution to transparently secure onetomany com
+munication iii Apptoapp security whether real endtoend
+security is guaranteed given the routing manager abstraction
+adopted in vsomeip ie multihop communication iv L4
+transparency whether security is transparently provided regard
+less of the L4 protocol eg TCP or UDP adopted for the actual
+message delivery In other words it indicates whether a single
+secure session can protect a service instance in the event that
+multiple transport protocols are leveraged simultaneously fordifferent purposes v IPC protection the possibility to directly
+protect interprocess communications ie Unix domain sockets
+adopted by vsomeip for efcient local message delivery
+without introducing the overhead of a full transport protocol
+A SOMEIP over IPSec
+Concerning SOMEIP protection IPSec could be leveraged
+to establish secure channels between different ECUs hosting
+distributed applications Nonetheless although the messages
+transmitted across the network would be secured the protection
+would be only at the network level being IPSec unaware of the
+actual trafc Hence it would not guarantee the authentication
+of the parties involved in the communication ie every
+application hosted on an ECU could send messages to another
+one hosted on a different ECU if a secure tunnel is established
+Similarly it would not secure the messages exchanged between
+applications executed on the same ECU Finally IPSec does
+not support multicast communication forcing the SOMEIP
+middleware to fallback to unicast and increasing the overall
+bandwidth usage Summarizing we deem IPSec not being
+suitable to guarantee the level of compatibility with the
+SOMEIP middleware at the basis of the design of our proposal
+B SOMEIP over TLSDTLS
+TLS is a wellestablished cryptographic protocol securing
+TCP connections while DTLS is an extension designed to
+protect UDP messages At rst sight they appear to be suitable
+to protect SOMEIP messages given the promised application
+awareness and endtoend security Indeed the feasibility of
+using TLS to protect invehicle communication has already
+been explored in literature 31 Yet in our opinion different
+factors still justify a custom solution First being general
+purpose TLS is characterized by a fairly complex session
+establishment process thus introducing a quite high overhead
+compared to a more targeted solution Second no standard
+version of DTLS does support multicast communication thus
+limiting the efciency in the delivery of notications Third
+both TLS and DTLS are not suitable to protect interprocess
+communication unless an additional overhead is introduced
+eg by using TCP Finally both security protocols cannot
+guarantee real endtoend security between the sending and the
+receiving applications when coupled with vsomeip  Indeed
+they would secure only the messages owing from one central
+routing manager to another leaving the local communication
+ie between each routing manager and the actual applications
+executed on the same ECU unauthenticated thus increasing
+the criticality associated with the central routing managers
+themselves Similarly since different service instances may be
+attached to the same fipportgtuple both TLS and DTLS
+could not provide real service granularity On the other hand
+our solution aims to achieve 100  compatibility with both
+SOMEIP and vsomeip  while featuring a more efcient
+session establishment procedure
+VIII E XPERIMENTAL EVALUATION
+To experimentally evaluate the performance of the solution
+proposed to secure SOMEIP communication we integrated
+ 
+12
+the security framework within vsomeip  Nonetheless we
+focused on the implementation of the security protocol leaving
+the usage of a secure storage as a future work Concerning
+cryptography we leveraged OpenSSL being it a wellknown
+efcient and commercial grade library available for a wide
+range of systems and architectures The complete source code
+of the proof of concept is publicly available on GitHub4Part
+of the results described in the remainder of this section stem
+from evaluation metrics originally presented in 17
+The testbed adopted for the experimental evaluation was
+composed of two identical NXPs development boards based
+on the iMX 7Dual applications processor They encompass
+two Arm CortexA7 cores operating at up to 1 GHz and
+1 GB of DDR3 RAM We directly interconnected the two
+ECUs through an Ethernet cable while limiting the speed
+to100 Mbps to match the current standard in automotive
+environments Concerning the operating system we adopted an
+embedded Posix Linux distribution according to the Adaptive
+Autosar guidelines Overall although not having used real
+production ECUs due to licensing issues we deem the whole
+setup matches the features of a real invehicle deployment
+Indeed both SOMEIP and the whole Adaptive Autosar
+standard have been developed with relatively highperformance
+microprocessorbased ECUs in mind focusing on use cases
+such as infotainment connected vehicle and ADAS
+A Session Establishment
+The rst target of the benchmark evaluation was the session
+establishment phase to measure the latency introduced before
+a service could be accessed To this end we developed two
+applications the former acts as a server offering 256different
+SOMEIP services The latter on the other hand concurrently
+requests a varying number of services ie implicitly starts
+the corresponding session establishment to evaluate how the
+handshake phase scales Technically speaking all authentication
+handshakes have been performed over UDP adopting RSA
+2048 as a strong asymmetric cryptography algorithm for
+encryption and digital signatures Fig 4 presents the outcome
+of the evaluation when varying the amount of parallel session
+establishments Considering the dotted line as a reference the
+overall trend conrms the scalability of the approach proposed
+Indeed doubling the number of services resulted in an increase
+of less than double the total authentication overhead thanks
+to the efcient exploitation of the available parallelism
+B RunTime Protection
+Subsequently we studied the effects of the three available
+security levels on the transmission of actual SOMEIP packets
+while adopting vanilla vsomeip as a reference Concerning
+cryptography we selected ChaCha20Poly1305 as symmetric
+algorithm to secure both authentication and condentiality 
+level services given its outstanding performance even without
+using hardware accelerators To account for multiple use
+cases and evaluate the different facets associated with the
+communication we adopted three complementary approaches
+4httpsgithubcomnetgrouppolitosecurevsomeip
+1 2 4 8 16 32 64 128 25664128256512102420484096
+ of concurrent session establishmentsTotal Elapsed Time  msFig 4 Evaluation of the time required to concurrently complete multiple
+session establishments varying the handshake parallelism the dotted line
+represents a reference corresponding to a doubling in the elapsed time
+Namely we considered the effects on message roundtrip
+time RTT number of interactions per second IPS and
+throughput Additionally concerning overall performance we
+complemented the benchmarks with CPU usage measurements
+C Round Trip Time
+First we evaluated the transmission of periodic messages
+in absence of other trafc assessing the latency introduced
+by message authentication and condentiality To this end we
+measured the total time required for an application to send a
+request message and receive its corresponding response Hence
+it accounts for the computations performed by the middleware
+as well as the network overhead The benchmark has been
+repeated considering multiple payload sizes ranging from 1
+to1024 bytes  to evaluate how much it inuences the results
+Only the request was modied between different runs while
+the responses were characterized by the absence of the payload
+Concerning the topology both applications have been ini
+tially executed on the same device Thus vsomeip leveraged
+Unix domain sockets for the delivery of the packets and the
+CPU was actually shared by both parties halving the total
+computational capacity Yet this conguration is deemed to
+better highlight the effects ascribable to security being the
+network latency much smaller compared to a physical network
+Fig 5a presents the results obtained which elicit three main
+considerations First security obviously introduced an overhead
+in the message transmission accounting for about 25  the
+total RTT Yet authentication andcondentiality security levels
+appear to be characterized by almost the same results Second
+no signicant differences emerge varying the message size with
+the security overhead becoming a little more prominent only
+for the biggest payload Third the CPU usage was quite high
+during the entire evaluation indeed both applications were
+executed on the same ECU effectively doubling the values
+presented Yet it remained constant presenting no valuable
+deviations when increasing the security level
+Second we hosted the two applications on different ECUs
+to assess the overhead in case of actual network communication
+In this conguration the measured RTTs were almost one order
+of magnitude higher than the previous situation  25 ms  due
+to physical network communication overhead Conversely the
+effects of security appeared to be way less prominent playing
+only a very small role in the total values Similarly the CPU
+load remained denitely low  5  being at the same time
+only slightly inuenced by cryptography
+ 
+13
+Vanilla vsomeip Nosec level Authentication level Condentiality level iperf3 only graph c
+001020304RTT  ms
+1 4 16 64 256 102402040
+Payload size  bytes CPU  
+a
+05101000IPS
+1 4 16 64 256 102402040
+Payload size  bytes CPU   b
+0020406Thr Gbps 
+UDP TCP0204060
+Transport protocolCPU   c
+Fig 5 Outcome of the benchmarks comparing vanilla vsomeip and our securityenhanced version in terms of a roundtriptime RTT in case of local
+communication b interactionspersecond IPS in case of local communication and c throughput in case of remote communication
+D Interactions Per Second
+Then we assessed the performance of secure SOMEIP
+under stress measuring the number of maximum interactions
+per second ie requests that an offerer can reply to in a
+given unit of time Although adopting a methodology similar
+to the RTT benchmarks the client was now congured to
+send the highest possible number of messages in parallel
+Fig 5b shows the outcome of the evaluation concerning local
+communication Generally speaking security features impacted
+for about 2530   without particular differences when varying
+the payload size or moving from the authentication to the
+condentiality security level Furthermore the results were
+denitely similar regardless of the type of communication
+adopted ie local or remote being the network overhead
+mitigated by the high number of parallel requests Additionally
+both benchmarks signicantly overloaded the CPU Indeed in
+case of local communication both the offerer and the requester
+were concurrently hosted by the same ECU thus halving the
+total computational capacity and corresponding to a total CPU
+usage slightly below 100   As for the remote communication
+benchmark instead the CPU load remained consistently around
+75   Nonetheless the introduction of security did not cause
+signicant differences in the CPU load being all measurements
+contained in the same uncertainty band
+E Throughput
+Moving on we evaluated the performance concerning the
+transmission of high amounts of data eg video streams To
+this end we leveraged the publishsubscribe communication
+pattern the offerer continuously streams SOMEIP packets
+eventually consumed by one of more requesters Regarding the
+transport protocol we assessed both the usage of UDP given its
+support to multicast communication and TCP which is deemed
+to be more suitable for the transmission of large chunks of data
+As for the former we congured the payload to contain the
+maximum possible amount of data  1400 bytes  considering
+the SOMEIP limitations Messages transported over TCP on
+the other hand were characterized by 64 kB payloads To better
+assess the actual throughput we also relaxed the limitation
+regarding the network speed Hence during this benchmark
+the two ECUs were effectively interconnected at 1 Gbps 
+Fig 5c presents the outcome of the evaluation measuring
+both the ability of the sender to transmit the messages and
+00204Thr Gbps 
+AES128CCM
+AES256CCM
+AES128GCM
+AES256GCM
+ChaCha20Poly1305
+Authentication Condentiality0204060
+Security levelCPU  Fig 6 Throughput over TCP and CPU usage comparison between different
+symmetric cryptography algorithms adopted to secure SOMEIP messages
+the capacity of the receiver to consume them ie including
+the necessary authentication and decryption operations Along
+with the other values the iperf3 bar represents a reference
+measurement obtained using the wellknown tool It aims to
+measure the bare network performance on top of UDP and TCP
+sockets in case the SOMEIP abstraction was not adopted At a
+glance it clearly stands out the signicantly better performance
+associated with iperf3 compared to vsomeip  Indeed
+in case UDP is adopted the former achieved a throughput
+almost four times higher while comparably loading the CPU
+Conversely with regards to the TCP benchmark similar
+throughput values were obtained yet a fourfold drop in CPU
+usage was observed when using iperf3  This comparison
+points out the high overhead introduced by the vsomeip
+implementation Hence it clearly remains a signicant room for
+improvements which security features would undoubtedly also
+benet from In this respect focusing on the UDP benchmark
+authentication andcondentiality levels respectively introduced
+an additional slow down accounting for 15  and 25  
+When adopting TCP as a transport protocol on the other
+hand condentiality impacted signicantly on the effective
+throughput being responsible for a 50  drop in performance
+compared to vanilla vsomeip 
+Finally Fig 6 compares the throughput values achieved when
+adopting different stateoftheart authenticated encryption
+algorithms In detail the evaluations were carried out over TCP
+operating the cryptographic algorithms both in authentication
+only and AEAD mode ie condentiality level ChaCha20
+Poly1305 clearly emerged as the fastest alternative Indeed
+although offering a 256 bits security level it achieved twice as
+much throughput compared to the second namely AESGCM
+AESCCM on the other hand appeared to be the slowest
+ 
+14
+01020Txtorx delay  msVanilla Nosec Authentication Condentiality
+2 4 8 12 16020406080
+ Simulated camerasCPU  
+Fig 7 Performance comparison between vanilla vsomeip and our security
+enhanced version in terms of txtorx delay and CPU usage when simulating
+multiple cameras operating at 60 fps and generating compressed video frames
+of425 kB 43 in case of remote communication the dotted line represents
+a reference corresponding to a delay equal to 16 ms 
+especially concerning authentication level services As for the
+AES security level about a 20  additional overhead was
+introduced when moving from 128 bits to256 bits keys
+F  Realistic Scenario
+The previous benchmarks were meant to independently
+measure the different facets of the overhead introduced by the
+runtime protection Yet to generalize the overall evaluation
+and assess the actual effects in a broader and more realistic
+scenario we then focused on simulating an ADAS system
+Specically we simulated multiple cameras in parallel each
+one operating at 60 fps and generating compressed video frames
+of425 kB 21 Mbps per camera 43 All frames were
+generated and timestamped by the rst board and sent to
+the second one over a 1 Gbps link and adopting TCP as a
+transport protocol to evaluate the txtorx delay and the CPU
+usage when varying the number of cameras and increasing the
+security level To this end we set 16 ms as an upper bound
+for the delay to guarantee the reception of a frame before
+the generation of the subsequent Yet stricter requirements
+may need to be enforced depending on the specic application
+and the amount of processing to be performed on the data
+received Finally as for clock synchronization we leveraged
+the Precision Time Protocol which delivers submicrosecond
+accuracy on LANs 44
+Fig 7 summarizes the results of the evaluation considering
+the number of parallel cameras ranging from 242 Mbps 
+to16336 Mbps  Concerning the txtorx delay the box
+plot represents the extension of the quartiles as well as of the
+1stand the 99thpercentile a representative set of outliers is
+shown as individual points for 100 s long simulations Focusing
+rst on the reference scenarios ie those with no security
+features enabled the median delay remained conned in the
+253 ms range Yet an increase in the number of cameras
+corresponded to a higher dispersion as well as a proportional
+growth in CPU usage The introduction of authentication 
+level security caused a 1525  additional overhead with a
+more signicant increase for what regards the 99thpercentile
+mark Nonetheless all frames but a very few outliers required
+less than 10 ms to be correctly received and authenticated
+02040Thr MBsSW i SW ii HW i HW ii
+64 256 1 k 4 k 16 k 64 k02040
+Chunk size  bytes CPU  Fig 8 Performance comparison between software and hardware implementa
+tions of AES128CBC when encrypting multiple chunks of data within i
+the same and ii different cryptographic contexts
+hence completely satisfying the requirements previously set
+Conversely condentiality was associated with a considerably
+higher impact both in terms of delay median and 99th
+percentile as well as CPU usage Additionally as for the
+most demanding case a few frames failed to be delivered
+within the expected deadline
+We believe the outcome of this benchmark to be twofold
+One the one hand it showed the sustainability of the security
+features having the requirements been satised in all but the
+most demanding scenario On the other hand it uncovered the
+much higher overhead associated with condentiality compared
+to authentication only Hence requiring a careful analysis to
+assess whether for each service this additional protection is
+actually required to avoid introducing unnecessary overhead
+Nonetheless it is also fair to mention that the ECUs leveraged
+for infotainment and ADAS systems on modern vehicles
+are much more powerful than our testbed eg the NVIDIA
+Drive PX family features up to 16ARM cores thus strongly
+attening the possible impact of the security features
+G Hardware Acceleration
+For the sake of generality the performance evaluation has
+been completed adopting software cryptographic implementa
+tions only However typical automotive ECUs may be comple
+mented with hardware accelerators Hence being the iMX7
+family of boards characterized by a Cryptographic Accelerator
+and Assurance Module CAAM we investigated also the
+performance achievable when leveraging ofoading features
+To this end we exploited the cryptodevlinux kernel
+module5 which provides an abstraction to allow userspace
+applications eg OpenSSL to transparently benet from
+hardware accelerators Focusing on symmetric cryptography
+we managed to ofoad AESCBC encryption and HMAC
+SHA1 authentication along with other legacy algorithms Yet
+no authenticated encryption support seemed to be provided
+Fig 8 presents an evaluation targeting AES128CBC which
+compares the performance of the software and the hardware
+implementations in terms of throughput ie amount of data
+encrypted per second and CPU usage6Two different scenarios
+have been considered i the encryption of a stream of chunks
+5httpcryptodevlinuxorg
+6Differently from the previous benchmarks this evaluation has been
+performed independently from the SOMEIP middleware to better highlight
+the performance differences of the cryptographic algorithms
+ 
+15
+of data eg a TCP ow using the same cryptographic context
+iekeyiv pair ii the encryption of independent messages
+such as those generated by SOMEIP hence the context is
+reinitialized before every operation ie varying the iv to avoid
+requiring a strict ordering during the reception eg if messages
+are transmitted over UDP Focusing rst on the results using
+the software implementation no relevant differences emerged
+when varying either the size of the chunks to be encrypted
+or the scenario considered Indeed the throughput remained
+stable around 24 MBs with 100  single core CPU usage
+The outcome of the measurements leveraging the hardware
+ofoading capabilities on the other hand turned out to be
+strongly inuenced by the amount of data to be encrypted
+Yet this dependency could be easily explained by the high
+overhead required to switch from user to kernel space and
+interact with the hardware module which pays off only with
+larger blocks both in terms of throughput and CPU usage with
+the latter going as low as 5 in the best case Additionally
+the reinitialization of the cryptographic context ie scenario
+ii proved to cause serious performance drops loosing all the
+advantages associated with hardware acceleration
+This preliminary evaluation pointed out some limitations
+of the hardware module featured by the testbed suggesting
+the adoption of software implementations in our PoC and
+for the benchmarks Indeed it provides limited support for
+stateoftheart cryptographic algorithms eg authenticated
+encryption ones as well as it is characterized by unsatisfactory
+performance especially in case of small messages Indeed
+ChaCha20Poly1305 consistently achieved better results even
+though it combines both encryption and authentication in a
+single interface and offers a 256 bits security level Although
+bound to the specicity of the platforms and the abstractions
+adopted we believe these measurements can shed some light
+on the possible limitations of hardware acceleration
+IX C ONCLUSIONS AND FUTURE WORK
+Novel invehicle services using highspeed communications
+are being increasingly implemented Yet over the last decade
+many researchers have demonstrated that unsecured network
+messages pose a serious threat in the vehicular domain perhaps
+granting a malicious entity the control of safetycritical systems
+and endangering the life of the passengers Starting from
+these considerations we proposed a novel framework to secure
+SOMEIP an emerging middleware designed by the AUTOSAR
+consortium to account for futureproof scenarios Differently
+from the encapsulation of SOMEIP messages within a lower
+secure protocol our solution aims to introduce no limitations
+in the functionalities provided by the middleware as well as
+being 100  compatible with its opensource implementation
+vsomeip  Simple highlevel rules are leveraged to allow auto
+motive companies to specify the set of peers each application is
+authorized to talk to sticking to the service abstraction adopted
+by SOMEIP In addition three incremental security levels are
+made available in order to associate each service to the one
+best matching its requirements The security protocol at the
+core of our solution has been formally modeled and veried so
+providing high assurance that the expected security propertieshold Finally extensive experimental evaluations conrmed
+the introduction of a fairly limited overhead during both the
+establishment of secure sessions and the runtime protection
+Nonetheless most of the burden is ascribable to cryptography
+better performance could be achieved using a weaker yet faster
+algorithm or leveraging more powerful hardware accelerators
+to relieve the main CPU from the task Future work will
+focus on preventing DoS attacks aiming to overload the
+devices with an excessive amount of trafc to prevent legitimate
+communications Additionally a thorough study will be carried
+out to understand how to integrate the security protocol with
+hardware security to preclude sufciently motivated attackers
+from tampering with cryptographic material
+ACKNOWLEDGMENT
+We thank Paolo Montuschi for the precious suggestions he
+gave us to improve the paper
+REFERENCES
+1R N Charette This car runs on code IEEE spectrum  vol 46 no 3
+p 3 Feb 2009
+2O Burkacky J Deichmann G Doll and C Knochenhauer Rethinking
+car software and electronics architecture McKinsey  Co  Feb 2018
+3H Winner S Hakuli F Lotz and C Singer Handbook of driver
+assistance systems Basic information components and systems for active
+safety and comfort  Springer 2015
+4G Meixner and C Mller Automotive User Interfaces Creating
+Interactive Experiences in the Car  Springer 2017
+5M Broy Challenges in automotive software engineering in Proc 28th
+ACM Int Conf Software Engineering  May 2006 pp 3342
+6K H Johansson M Trngren and L Nielsen Vehicle applications
+of controller area network in Handbook of networked and embedded
+control systems  Springer 2005 pp 741765
+7IEEE IEEE standard for Ethernet amendment 1 Physical layer
+specications and management parameters for 100 Mbs operation over
+a single balanced twisted pair cable 100BASET1 IEEE Std 8023bw
+2015 Amendment to IEEE Std 80232015  pp 188 Mar 2016
+8L L Bello The case for Ethernet in automotive communications
+SIGBED Rev  vol 8 no 4 pp 715 Dec 2011
+9S Tuohy M Glavin C Hughes E Jones M Trivedi and L Kilmartin
+Intravehicle networks A review IEEE Trans Intell Transp Syst 
+vol 16 no 2 pp 534545 Apr 2015
+10 AUTOSAR SOMEIP Protocol Specication  2016 Online
+Available httpswwwautosarorgleadminuseruploadstandards
+foundation10AUTOSARPRSSOMEIPProtocolpdf
+11 J Ning J Wang J Liu and N Kato Attacker identication and
+intrusion detection for invehicle networks IEEE Commun Lett  vol 23
+no 11 pp 19271930 Nov 2019
+12 T Hoppe S Kiltz and J Dittmann Security threats to automotive CAN
+networks  Practical examples and selected shortterm countermeasures
+Rel Eng Syst Safety  vol 96 no 1 pp 1125 Jan 2011
+13 K Koscher et al  Experimental security analysis of a modern auto
+mobile in Proc IEEE Symp Security and Privacy  May 2010 pp
+447462
+14 S Checkoway et al  Comprehensive experimental analyses of automo
+tive attack surfaces in Proc 20th USENIX Conf Security  Aug 2011
+pp 7792
+15 C Miller and C Valasek Remote exploitation of an unaltered passenger
+vehicle Proc Black Hat USA  Aug 2015
+16 S Nie L Liu and Y  Du Freefall hacking tesla from wireless to
+CAN bus Proc Black Hat USA  Jul 2017
+17 M Iorio A Buttiglieri M Reineri F Risso R Sisto and F Valenza
+Protecting invehicle services Securityenabled SOMEIP middleware
+IEEE Veh Technol Mag  vol 15 no 3 pp 7785 Sep 2020
+18 B Groza S Murvay A van Herrewege and I Verbauwhede LiBrA
+CAN A lightweight broadcast authentication protocol for controller area
+networks in Proc Int Conf Cryptology and Network Security  Dec
+2012 pp 185200
+ 
+16
+19 P Murvay and B Groza Source identication using signal characteristics
+in controller area networks IEEE Signal Process Lett  vol 21 no 4
+pp 395399 Apr 2014
+20 Q Wang and S Sawhney Vecure A practical security framework to
+protect the CAN bus of vehicles in Proc Int Conf Internet of Things
+IOT  Oct 2014 pp 1318
+21 J H Kim S Seo N Hai B M Cheon Y  S Lee and J W Jeon
+Gateway framework for invehicle networks based on CAN FlexRay
+and Ethernet IEEE Trans Veh Technol  vol 64 no 10 pp 44724486
+Oct 2015
+22 E Wang W Xu S Sastry S Liu and K Zeng Hardware modulebased
+message authentication in intravehicle networks in Proc ACMIEEE
+8th Int Conf CyberPhysical Systems  Apr 2017 pp 207216
+23 KT Cho and K G Shin Fingerprinting electronic control units for
+vehicle intrusion detection in Proc 25th USENIX Conf Security Symp 
+Aug 2016 pp 911927
+24 S Jain and J Guajardo Physical layer group key agreement for
+automotive controller area networks in Proc Int Conf Cryptographic
+Hardware and Embedded Systems  Aug 2016 pp 85105
+25 S Nrnberger and C Rossow  vatiCAN  vetted authenticated CAN
+bus in Proc Int Conf Cryptographic Hardware and Embedded Systems 
+Aug 2016 pp 106124
+26 B Groza and P Murvay Security solutions for the controller area
+network Bringing authentication to invehicle networks IEEE Veh
+Technol Mag  vol 13 no 1 pp 4047 Mar 2018
+27 D Pllen N A Anagnostopoulos T Arul and S Katzenbeisser Using
+implicit certication to efciently establish authenticated group keys for
+invehicle networks in Proc IEEE Vehicular Networking Conf VNC 
+Dec 2019 pp 168175
+28 A Perrig R Canetti J D Tygar and Dawn Song Efcient authenti
+cation and signing of multicast streams over lossy channels in Proc
+IEEE Symp Security and Privacy  May 2000 pp 5673
+29 M Wolf A Weimerskirch and C Paar Secure invehicle communi
+cation in Embedded Security in Cars Securing Current and Future
+Automotive IT Applications  Springer 2006 pp 95109
+30 M Hamad M Nolte and V  Prevelakis A framework for policy based
+secure intra vehicle communication in Proc IEEE Vehicular Networking
+Conf VNC  Nov 2017 pp 18
+31 D Zelle C Krau H Strau and K Schmidt On using TLS to secure
+invehicle networks in Proc 12th Int Conf Availability Reliability and
+Security  Aug 2017 pp 110
+32 M Oertel and B Zimmer EE architectures with AUTOSAR adaptive
+Vector Tech Rep May 2019
+33 AUTOSAR Explanation of Adaptive Platform Design  2017
+Online Available httpswwwautosarorgleadminuserupload
+standardsadaptive1710AUTOSAREXPPlatformDesignpdf
+34  SOMEIP Service Discovery Protocol Specication  2017 Online
+Available httpswwwautosarorgleadminuseruploadstandards
+foundation13AUTOSARPRSSOMEIPServiceDiscoveryProtocol
+pdf
+35 G PardoCastellote OMG datadistribution service architectural
+overview in Proc 23rd Int Conf on Distributed Computing Systems
+Workshops  May 2003 pp 200206
+36 Object Management Group OMG Remote Procedure Call over
+DDS DDSRPC Version 10  2017 Online Available https
+wwwomgorgspecDDSRPC10PDF
+37  The Realtime PublishSubscribe Protocol DDS Interoperability
+Wire Protocol DDSIRTPS Specication Version 23  2019 Online
+Available httpswwwomgorgspecDDSIRTPS23PDF
+38  DDS Security Version 11  2018 Online Available
+httpswwwomgorgspecDDSSECURITY11PDF
+39 M Wolf and T Gendrullis Design implementation and evaluation of
+a vehicular hardware security module in Proc Int Conf Information
+Security and Cryptology  Dec 2012 pp 302318
+40 D Dolev and A Yao On the security of public key protocols IEEE
+Trans Inf Theory  vol 29 no 2 pp 198208 Mar 1983
+41 E Rescorla and N Modadugu Datagram transport layer security
+version 12 RFC Editor RFC 6347 2012
+42 B Blanchet An efcient cryptographic protocol verier based on prolog
+rules in Proc 14th IEEE Computer Security Foundations Workshop 
+Jun 2001 pp 8296
+43 J Migge J Villanueva N Navet and M Boyer Insights on the
+performance and conguration of A VB and TSN in automotive ethernet
+networks in Proc 9th Eur Congr Embedded Real Time Software and
+Systems ERTS 2018  Jan 2018 pp 11444 IEEE IEEE standard for a precision clock synchronization protocol
+for networked measurement and control systems IEEE Std 15882019
+Revision of IEEE Std 15882008  pp 1499 Jun 2020
+Marco Iorio received the MSc degree in computer
+engineering from the Politecnico di Torino Italy
+in 2018 where he is currently pursuing the PhD
+degree His research interests include cooperative
+driving vehicular networks and cybersecurity
+Massimo Reineri received his PhD in electronics
+and communication engineering from the Politecnico
+di Torino Italy in 2013 In 2013 Massimo joined the
+Istituto Superiore Mario Boella as postdoctorate
+researcher In 2014 he moved to Magneti Marelli
+Motorsport as RD Telemetry Engineer for Formula
+1 Championship In 2017 Massimo joined Italdesign
+where he is currently working as Connected Car
+Specialist His main activities focus on testbed
+content downloading communication protocols and
+user applications for Vehicular Networks
+Fulvio Risso received the MSc 1995 and PhD
+2000 in computer engineering from the Politecnico
+di Torino Italy He is currently Associate Professor
+with the Politecnico di Torino His research interests
+focus on highspeed and exible network process
+ing edgefog computing softwaredened networks
+network functions virtualization He has coauthored
+more than 130 scientic papers
+Riccardo Sisto received the PhD degree in com
+puter engineering from the Politecnico di Torino
+Italy in 1992 Since 2004 he has been a Full Pro
+fessor of computer engineering with the Politecnico
+di Torino He has authored and coauthored more
+than 120 scientic papers His main research inter
+ests include formal methods applied to distributed
+software and communication protocol engineering
+distributed systems and computer security He is a
+Senior Member of the ACM
+Fulvio Valenza received the MSc summa cum
+laude in 2013 and the PhD summa cum laude in
+Computer Engineering in 2017 from the Politecnico
+di Torino Italy His research activity focuses on net
+work security policies Currently he is a Researcher
+at the Politecnico di Torino Italy where he works on
+orchestration and management of network security
+functions in the context of SDNNFVbased networks
+ 

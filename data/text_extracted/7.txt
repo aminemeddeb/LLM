@@ -1,0 +1,3344 @@
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Document TitleExample for a Serialization
+Protocol SOMEIP
+Document Owner AUTOSAR
+Document Responsibility AUTOSAR
+Document Identication No 637
+Document Classication Auxiliary
+Document Version 100
+Document Status Final
+Part of Release 41
+Revision 1
+Document Change History
+Date Version Changed by Description
+06032013 100AUTOSAR
+AdministrationInitial Release
+1 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Disclaimer
+This specication and the material contained in it as released by AUTOSAR is for the
+purpose of information only AUTOSAR and the companies that have contributed to it
+shall not be liable for any use of the specication
+The material contained in this specication is protected by copyright and other types of
+Intellectual Property Rights The commercial exploitation of the material contained in
+this specication requires a license to such Intellectual Property Rights
+This specication may be utilized or reproduced without any modication in any form
+or by any means for informational purposes only
+For any other purpose no part of the specication may be utilized or reproduced in
+any form or by any means without permission in writing from the publisher
+The AUTOSAR specications have been developed for automotive applications only
+They have neither been developed nor tested for nonautomotive applications
+The word AUTOSAR and the AUTOSAR logo are registered trademarks
+Advice for users
+AUTOSAR Specication Documents may contain exemplary items exemplary refer
+ence models use cases andor references to exemplary technical solutions devices
+processes or software
+Any such exemplary items are contained in the Specication Documents for illustration
+purposes only and they themselves are not part of the AUTOSAR Standard Nei
+ther their presence in such Specication Documents nor any later documentation of
+AUTOSAR conformance of products actually implementing such exemplary items im
+ply that intellectual property rights covering such exemplary items are licensed under
+the same rules as applicable to the AUTOSAR Standard
+2 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Table of Contents
+1 Introduction and functional overview 6
+2 Acronyms and Abbreviations 8
+3 Related documentation 10
+31 Input documents                                10
+32 Related standards and norms                         11
+33 Related specication                              11
+4 Constraints and assumptions 12
+41 Limitations                                   12
+42 Applicability to car domains                          12
+5 Dependencies to other modules 13
+51 File structure                                  13
+511 Code le structure                           13
+512 Header le structure                          13
+6 Functional specication 14
+61 Denition of Identiers                             14
+62 Specication of the SOMEIP onwire format                15
+621 Transport Protocol                           15
+6211 Message Length Limitations                15
+622 Endianess                                16
+623 Header                                 16
+6231 IPAddress  port numbers                 17
+6232 Message ID 32 Bit                     17
+6233 Length 32 Bit                        18
+6234 Request ID 32 Bit                     18
+6235 Protocol Version 8 Bit                   19
+6236 Interface Major Version 8 Bit               20
+6237 Message Type 8 Bit                    20
+6238 Return Code 8 Bit                     20
+6239 Payload variable size                    21
+624 Serialization of Parameters and Data Structures          21
+6241 Basic Datatypes                       21
+6242 Structured Datatypes structs               22
+6243 Strings xed length                    24
+6244 Strings dynamic length                  24
+6245 Arrays xed length                     25
+6246 Optional Fields                        26
+6247 Dynamic Length Arrays                   26
+6248 Enumeration                         28
+6249 Union  Variant                        28
+3 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+62410 Example Map  Dictionary                  29
+63 RPC Protocol specication                          30
+631 Transport Protocol Bindings                      30
+6311 UDP Binding                         30
+6312 TCP Binding                         31
+6313 Multiple ServiceInstances                 33
+632 RequestResponse Communication                 34
+6321 AUTOSAR Specic                     34
+633 FireForget Communication                     35
+6331 AUTOSAR Specic                     35
+634 Notication                               35
+6341 Strategy for sending notications              35
+6342 PublishSubscribe Handling                 36
+6343 AUTOSAR Specic                     36
+635 Fields                                  36
+636 Error Handling                             37
+6361 Transporting Application Error Codes and Exceptions  37
+6362 Return Code                         37
+6363 Error Message Format                   38
+6364 Communication Errors and Handling of Communication
+Errors                             39
+64 Guidelines on SOMEIP                            40
+641 Choosing the transport protocol                    40
+642 Implementing Advanced Features in AUTOSAR Applications   41
+643 Serialization of Data Structures Containing Pointers        41
+6431 Array of data structures with implicit ID          42
+6432 Array of data structures with explicit ID          42
+65 Compatibility rules for Interface Design informational           42
+66 Transporting CAN and FlexRay Frames                   44
+661 AUTOSAR specic                           45
+67 SOMEIP Service Discovery SOMEIPSD                 45
+671 General                                 45
+6711 Terms and Denitions                    45
+672 SOMEIPSD ECUinternal Interface                 46
+673 SOMEIPSD Message Format                    47
+6731 General Requirements                   47
+6732 Header                            48
+6733 Entry Format                         49
+6734 Options Format                       51
+6735 Referencing Options from Entries             58
+6736 Example                           59
+674 Service Discovery Messages                     60
+6741 Service Entries                        60
+6742 Eventgroup Entry                      62
+675 Service Discovery Communication Behavior             64
+6751 Startup Behavior                       64
+4 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6752 Server Answer Behavior                  66
+6753 Shutdown Behavior                     67
+6754 State Machines                       67
+676 Announcing nonSOMEIP protocols with SOMEIPSD      69
+677 PublishSubscribe with SOMEIP and SOMEIPSD        72
+678 Endpoint Handling for Services and Events             80
+6781 Service Endpoints                      80
+6782 Eventgroup Endpoints                    81
+6783 Example                           82
+679 Mandatory Feature Set and Basic Behavior             83
+6710 SOMEIPSD Mechanisms and Errors                86
+68 Migration and Compatibility                          87
+681 Supporting multiple versions of the same service         87
+69 Reserved and special identiers for SOMEIP and SOMEIPSD     88
+5 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+1 Introduction and functional overview
+This document species the Scalable serviceOriented middlewarE over IP
+SOMEIP  an automotiveembedded RPC mechanism and the underlying serial
+ization  wire format  as an example for a Serializatier called by the RTE
+The basic motivation to specify yet another RPCMechanism instead of using an
+existing infrastructuretechnology is the goal to have a technology that
+Fullls the hard requirements regarding resource consumption in an embedded
+world
+Is compatible through as many usecases and communication partners as possi
+ble
+compatible with AUTOSAR at least on the wireformat level ie can commu
+nicate with PDUs AUTOSARs can receive and send without modication to the
+AUTOSAR standard The mappings within AUTOSAR shall be chosen according
+to the SOMEIP specication
+Provides the features required by automotive usecases
+Is scalable from tiny to large platforms
+Can be implemented on different operating system ie AUTOSAR GENIVI and
+OSEK and even embedded devices without operating system
+SOMEIP is only an example for a serializer which can be used for interECU Clien
+tServer Serialization An implementation of SOMEIP allows AUTOSAR to parse the
+RPC PDUs and transport the signals to the application
+As a consequence this example denes several feature sets The feature set basic is
+compatible to AUTOSAR 411 The other feature sets are in progress to be integrated
+into AUTOSAR The goal is to increase the compatibility towards higher sophisticated
+feature sets It is however possible to use these features in nonAUTOSAR nodes or
+to implement them inside the AUTOSAR application with a carefully designed interface
+see Chapter 64 and suitable tool chain
+For ECUs not using AUTOSAR the complete feature set can be supported as of today
+but a limited set of features can be used in the communication with AUTOSAR ECUs
+SOMEIP and SOMEIPSD may be implemented in AUTOSAR in different modules
+Currently the Socket Adaptor may write the MessageID and Length eld by means of
+the header mode
+For the data path SOMEIP the message may be serializeddeserialized by the COM
+an pluggable serializer in the RTE or a proxy SWS
+For the control path SOMEIPSD the Service Discovery Module implements
+SOMEIPSD including the SOMEIP headers without the MessageID and Length eld
+itself
+6 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Figure 11 Example for SomeIP in AUTOSAR
+7 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+2 Acronyms and Abbreviations
+The glossary below includes acronyms and abbreviations relevant to the SOMEIP
+specication that are not included in the 1 AUTOSAR glossary
+Abbreviation  Acronym Description
+Methoda method procedure function or subroutine that can
+be calledinvoked
+Parameters input output or inputoutput arguments of a method
+Remote Procedure Call
+RPCa method call from one ECU to another that is trans
+mitted using messages
+Requesta message of the client to the server invoking a
+method
+Responsea message of the server to the client transporting re
+sults of a method invocation
+RequestResponse com
+municationa RPC that consists of request and response
+FireForget communica
+tiona RPC call that consists only of a request message
+Eventa FireForget callback that is only invoked on changes
+or cyclic and is sent from Server to Client
+Fielda representation of a remote property which has up to
+one getter up to one setter and up to one notier
+Notication Eventan event message the notier of an eld sends The
+message of such a notier cannot be distinquised from
+the event message therefore when refering to the
+message of an event this shall also be true for the
+messages of notiers of elds
+Gettera RequestResponse call that allows read access to a
+eld
+Settera RequestResponse call that allows write access to a
+eld
+Notiersends out event message with a new value on change
+of the value of the eld
+Servicea logical combination of zero or more methods zero or
+more events and zero or more elds empty service is
+allowed eg for announcing nonSOMEIP services in
+SOMEIPSD
+Eventgroupa logical grouping of events and notication events of
+elds inside a service in order to allow subscription
+Service Interfacethe formal specication of the service including its
+methods events and elds
+8 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Abbreviation  Acronym Description
+Service Instancesoftware implementation of the service interface
+which can exist more than once in the vehicle and
+more than once on an ECU
+ServerThe ECU offering a service instance shall be called
+server in the context of this service instance
+ClientThe ECU using the service instance of a server shall
+be called client in the context of this service instance
+Union or Varianta data structure that can dynamically assume different
+data types
+Offering a service instancethat one ECU implements an instance of a service and
+tells other ECUs using SOMEIPSD that they may use
+it
+Finding a service instanceto send a SOMEIPSD message in order to nd a
+needed service instance
+Requiring a service in
+stanceto send a SOMEIPSD message to the ECU imple
+menting the required service instance with the mean
+ing that this service instance is needed by the other
+ECU This may be also sent if the service instance is
+not running thus was not offered yet
+Releasing a service in
+stanceto sent a SOMEIPSD message to the ECU hosting
+this service instances with the meaning that the ser
+vice instance is not longer needed
+ServerServiceInstance
+Entrythe conguration and required data of a service in
+stance the local ECU offers
+ClientServiceInstance
+Entrythe conguration and required data of a service in
+stance another ECU offers
+Publishing an eventgroupto offer an eventgroup of a service instance to other
+ECUs using a SOMEIPSD message
+Subscribing an eventgroupto require an evengroup of a service instance using a
+SOMEIPSD message
+9 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+3 Related documentation
+31 Input documents
+1 Glossary
+AUTOSARTRGlossarypdf
+10 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+32 Related standards and norms
+Not applicable
+33 Related specication
+Not applicable
+11 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+4 Constraints and assumptions
+41 Limitations
+No limitations
+42 Applicability to car domains
+No restrictions
+12 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+5 Dependencies to other modules
+There are not dependencides to AUTOSAR SWS modules
+51 File structure
+511 Code le structure
+Not applicable
+512 Header le structure
+Not applicable
+13 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6 Functional specication
+61 Denition of Identiers
+TRSOMEIP00001 dA service shall be identied using the ServiceID c
+TRSOMEIP00002 dServiceIDs shall be of type 16 bit length unsigned integer
+uint16c
+TRSOMEIP00003 dThe ServiceID of 0xFFFE shall be used to encode non
+SOMEIP services c
+TRSOMEIP00004 dThe ServiceID of 0x0000 and 0xFFFF shall be reserved for
+special cases A reference table can be found in TRSOMEIP00515 c
+TRSOMEIP00005 dDifferent services within the same vehicle shall have different
+ServiceIDsc
+TRSOMEIP00006 dA service instance shall be identied using the Service
+InstanceIDc
+TRSOMEIP00007 dServiceInstanceIDs shall be of type 16 bit length unsigned
+integer uint16c
+TRSOMEIP00008 dThe ServiceInstanceIDs of 0x0000 and 0xFFFF shall not be
+used for a service since 0x0000 is reserved and 0xFFFF is used to describe all service
+instancesc
+TRSOMEIP00009 dDifferent service instances within the same vehicle shall have
+different ServiceInstanceIDs c
+Note
+This means that two different camera services shall have two different Service
+InstanceIDs SIID1 and SIID2 For all vehicles of a vehicle project SIID1 shall
+be the same The same is true for SIID2 If considering another vehicle project dif
+ferent IDs may be used but it makes sense to use the same IDs among different vehicle
+projects for ease in testing and integration
+TRSOMEIP00010 dMethods and events shall be identied inside a service using
+a 16bit MethodID which may be also called EventID for events and notications c
+TRSOMEIP00011 dMethods shall use MethodIDs with the highest bit set to 0
+while the MethodIDs highest bit shall be set to 1 for events and notications of elds
+c
+TRSOMEIP00012 dAn eventgroup shall be identied using the EventgroupID c
+TRSOMEIP00013 dEventgroupIDs shall be of 16 bit length unsigned integer
+uint16c
+TRSOMEIP00014 dDifferent eventgroups of a service shall have different
+EventgroupIDs c
+14 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+62 Specication of the SOMEIP onwire format
+Serialization describes the way data is represented in protocol data units PDUs trans
+ported over an IPbased automotive invehicle network
+621 Transport Protocol
+TRSOMEIP00016 dSOMEIP may be transported using UDP or TCP  When used
+in a vehicle the ports used shall be specied in the Interface Specication c
+TRSOMEIP00021 dIf an ECU needs to dynamically use a port number it shall
+follow the rules of IETF and IANA for that
+Ephermeral ports from range 4915265535
+c
+TRSOMEIP00017 dThe IP addresses and port numbers an ECU shall use shall
+be taken from the Interface Specication c
+TRSOMEIP00018 dThe client shall take the IP address and port number the server
+announces using SOMEIPSD see Chapter 67342 c
+TRSOMEIP00019 dSOMEIPSD currently uses port 304901but this shall be over
+written if another port number is specied in the Interface Specication c
+TRSOMEIP00020 dThe port 304902UDP and TCP as well shall be only used for
+SOMEIPSD and not used for applications communicating over SOMEIP  c
+TRSOMEIP00022 dIt is recommended to use UDP for as many messages as
+possible and see TCP as fallback for message requiring larger size UDP allows the
+application to better control the timeouts and behavior when errors occurring c
+6211 Message Length Limitations
+TRSOMEIP00023 dIn combination with regular Ethernet IPv4 and UDP can trans
+port packets with up to 1472 Bytes of data without fragmentation while IPv6 uses
+additional 20 Bytes Especially for small systems fragmentation shall be avoided so
+the SOMEIP header and payload should be of limited length The possible usage of
+security protocols further limits the maximal size of SOMEIP messages c
+TRSOMEIP00024 dWhen using UDP as transport protocol SOMEIP messages
+may use up to 1416 Bytes for the SOMEIP header and payload so that 1400 Bytes
+are available for the payload c
+1Port number 30490 is currently not registered with IANA and might change without further notice
+2Port number 30490 is currently not registered with IANA and might change without further notice
+15 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00025 dThe usage of TCP allows for larger streams of data which may
+be used for the SOMEIP header and payload However current transport protocols
+for CAN and FlexRay as well as AUTOSAR limit messages to 4095 Bytes When
+compatibility to CAN or FlexRay has to be achieved SOMEIP messages including the
+SOMEIP header shall not exceed 4095 Bytes c
+TRSOMEIP00026 dSee also TRSOMEIP00061 and TRSOMEIP00139 for
+payload lengthc
+62111 AUTOSAR restrictions
+TRSOMEIP00027 dSee AUTOSAR SWS COM Chapter 76 c
+622 Endianess
+TRSOMEIP00028 dAll RPCHeaders shall be encoded in network byte order big
+endian RFC 791 The byte order of the parameters inside the payload shall be de
+ned by the interface denition ie FIBEX or ARXML and should be in network byte
+order when possible and if no other byte order is specied c
+TRSOMEIP00029 dThis means that Length and Type elds shall be always in
+network byte order c
+623 Header
+TRSOMEIP00030 dFor interoperability reasons the header layout shall be identical
+for all scales of the SOMEIP and is shown in the Figure 61 The elds are presented
+in transmission order ie the elds on the top left are transmitted rst In the following
+sections the different header elds and their usage is being described c
+TRSOMEIP00031 d
+Protocol Version 8 bit Interface Version 8 bit Message Type 8 bit Return Code 8 bitRequest ID Client ID  Session ID 32 bitLength 32 bitMessage ID Service ID  Method ID 32 bit
+Payload variable size012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Covered by Length
+16 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Figure 61 SOMEIP Header Format
+c
+6231 IPAddress  port numbers
+TRSOMEIP00032 dThe Layout in Figure 61 shows the basic header layout over IP
+and the transport protocol used This format can be easily implemented with AUTOSAR
+as well For details regarding the socket handling see AUTOSAR Socket Adaptor SWS
+c
+62311 Mapping of IP Addresses and Ports
+TRSOMEIP00033 dFor the response and error message the IP addresses and
+port number of the transport protocol shall match the request message This means
+Source IP address of response  destination IP address of request
+Destination IP address of response  source IP address of request
+Source port of response  destination port of request
+Destination port of response  source port of request
+The transport protocol TCP or UDP stays the same
+c
+6232 Message ID 32 Bit
+TRSOMEIP00034 dThe Message ID is a 32 Bit identier that is used to dispatch
+the RPC call to a method of an application and to identify a notication The Message
+ID has to uniquely identify a method c
+TRSOMEIP00035 dThe assignment of the Message ID is up to the user however
+the Message ID has to be unique for the whole system ie the vehicle The Message
+ID can be best compared to a CAN ID and should be handled with a comparable
+process The next section describes how structure the Message IDs in order to ease
+the organization of Message IDs c
+62321 Structure of the Message ID
+TRSOMEIP00036 dIn order to structure the different methods events and elds
+they are clustered into services Services have a set of methods events and elds as
+17 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+well as a Service ID which is only used for this service The events and notication
+events may in addition be assigned into a number eventgroups which simplify the
+registration of events and noties
+An event may be part of zero to many eventgroup and an eventgroup can contain zero
+to many events An eld may be part of zero to many eventgroup and an eventgroup
+can contain zero to many elds
+c
+TRSOMEIP00037 dCurrently empty eventgroups are not used and events as well
+as elds are mapped to at least one eventgroup c
+TRSOMEIP00038 dFor RPC calls we structure the ID in 216services with 215meth
+ods
+Service ID 16 Bit 0 1 Bit Method ID last 15 Bit
+c
+TRSOMEIP00039 dWith 16 Bit ServiceID and a 16 Bit MethodID starting with a
+0Bit this allows for up to 65536 services with up to 32768 methods each c
+TRSOMEIP00040 dSince events and notications see Notication or PublishSub
+scribe are transported using RPC the ID space for the events is further structured
+Service ID 16 Bit 1 1 Bit Event ID last 15 Bit
+c
+TRSOMEIP00041 dThis means that up to 32768 events or notications per service
+are possiblec
+6233 Length 32 Bit
+TRSOMEIP00042 dLength is a eld of 32 Bits containing the length in Byte of
+the payload beginning with the Request IDClient ID until the end of the SOMEIP
+messagec
+Rationale MessageID and Length are not covered since this allows the AUTOSAR
+Socket Adaptor header mode to work
+6234 Request ID 32 Bit
+TRSOMEIP00043 dThe Request ID allows a client to differentiate multiple calls to
+the same method Therefore the Request ID has to be unique for a single client and
+server combination only When generating a response message the server has copy
+18 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+the Request ID from the request to the response message This allows the client to
+map a response to the issued request even with more than one request outstanding c
+TRSOMEIP00044 dRequest IDs might be reused as soon as the response arrived
+or is not expected to arrive anymore timeout In most automotive use cases a very low
+number of outstanding requests are expected For small systems without the possibility
+of parallel requests the Request ID might always set to the same value c
+TRSOMEIP00045 dFor AUTOSAR systems the Request ID needs to be structured
+as shown in the next section Even for nonAUTOSAR systems it is recommended to
+encode the callers Client ID as shown in the next section c
+62341 Structure of the Request ID
+TRSOMEIP00046 dIn AUTOSAR the Request ID is constructed of the Client ID
+and Session ID
+Client ID 16 Bits Session ID 16 Bits
+c
+TRSOMEIP00047 dThe Client ID is the unique identier for the calling client inside
+the ECU The Session ID is a unique identier chosen by the client for each call If
+session handling is not used the Session ID shall be set to 0x0000 c
+TRSOMEIP00048 dIf session handling is used the Session ID shall start with
+0x0001 else it can be set to 0x0000 c
+TRSOMEIP00049 dFor events and notication events no session handling shall
+be used thus the Client ID should be set to 0x0000 c
+TRSOMEIP00050 dFor reforget methods events and notication events the
+Session ID should start with 1 and be incremented for every message sent c
+TRSOMEIP00521 dWhen the Session ID reaches 0xFFFF  it shall start with
+0x0001 againc
+TRSOMEIP00051 dThe handling of the Request ID in SOMEIPSD messages is
+discussed later in this specication c
+6235 Protocol Version 8 Bit
+TRSOMEIP00052 dProtocol Version is an 8 Bit eld containing the SOMEIP pro
+tocol version which currently shall be set to 0x01 c
+19 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6236 Interface Major Version 8 Bit
+TRSOMEIP00053 dInterface Major Version is an 8 Bit eld that contains the Major
+Version of the Service Interface c
+Rationale This is required to catch mismatches in Service denitions and allows de
+bugging tools to identify the Service Interface used if version is used
+6237 Message Type 8 Bit
+TRSOMEIP00055 dThe Message Type eld is used to differentiate different types
+of messages and may contain the following values
+Number Value Description
+0x00 REQUEST A request expecting a response
+even void
+0x01 REQUESTNORETURN A reforget request
+0x02 NOTIFICATION A request of a noticationevent
+callback expecting no response
+c
+TRSOMEIP00056 dRegular request message type 0x00 will be answered by
+a response message type 0x80 when no error occurred If errors occur an error
+message message type 0x81 will be sent It is also possible to send a request that
+does not have a response message message type 0x01 For updating values through
+notication a callback interface exists message type 0x02 c
+6238 Return Code 8 Bit
+TRSOMEIP00058 dThe Return Code is used to signal whether a request was
+successfully been processed For simplication of the header layout every message
+transports the eld Return Code
+The Return Codes are specied in detail in TRSOMEIP00191
+Messages of Type REQUEST REQUESTNORETURN and Notication have to set
+the Return Code to 0x00 EOK The allowed Return Codes for specic message
+types are
+Message Type Allowed Return Codes
+REQUEST NA set to 0x00 EOK
+REQUESTNORETURN NA set to 0x00 EOK
+NOTIFICATION NA set to 0x00 EOK
+RESPONSE See Return Codes in TRSOMEIP00191
+20 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+ERROR See Return Codes in TRSOMEIP00191 Shall
+not be 0x00 EOK
+c
+6239 Payload variable size
+TRSOMEIP00060 dIn the payload eld the parameters are carried The serializa
+tion of the parameters will be specied in the following section c
+TRSOMEIP00061 dThe size of the SOMEIP payload eld depends on the trans
+port protocol used With UDP the SOMEIP payload can be between 0 and 1400 Bytes
+The limitation to 1400 Bytes is needed in order to allow for future changes to protocol
+stack eg changing to IPv6 or adding security means Since TCP supports segmen
+tation of payloads larger sizes are automatically supported c
+624 Serialization of Parameters and Data Structures
+TRSOMEIP00062 dThe serialization is based on the parameter list dened by the
+interface specication To allow migration of the service interface the deserialization
+code shall ignore parameters attached to the end of previously known parameter list
+ie parameters that were not dened in the interface specication used to generate or
+parameterize the deserialization code c
+TRSOMEIP00063 dThe interface specication denes the exact position of all
+parameters in the PDU and has to consider the memory alignment The serialization
+shall not try to automatically align parameters but shall be aligned as specied in the
+interface specication SOMEIP payload should be placed in memory so that the
+SOMEIP payload is suitable aligned For infotainment ECUs an alignment of 8 Bytes
+ie 64 bits should be achieved for all ECU at least an alignment of 4 Bytes shall be
+achievedc
+TRSOMEIP00064 dIn the following the deserialization of different parameters is
+speciedc
+6241 Basic Datatypes
+TRSOMEIP00065 dThe following basic datatypes shall be supported
+Type Description Size bit Remark
+boolean TRUEFALSE value 8 FALSE 0 TRUE 1
+uint8 unsigned Integer 8
+uint16 unsigned Integer 16
+21 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+uint32 unsigned Integer 32
+sint8 signed Integer 8
+sint16 signed Integer 16
+sint32 signed Integer 32
+oat32 oating point number 32 IEEE 754 binary32 Single
+Precision
+oat64 oating point number 64 IEEE 754 binary64 Double
+Precision
+c
+TRSOMEIP00066 dThe Byte Order is specied for each parameter by the interface
+denitionc
+TRSOMEIP00067 dIn addition uint64 and sint64 types may be supported c
+62411 AUTOSAR Specics
+TRSOMEIP00068 dSee AUTOSAR SWS COM 722 COM675 for supported
+data typesc
+TRSOMEIP00069 dAUTOSAR COM module shall support endianess conversion
+for all Integer types COM007 c
+TRSOMEIP00070 dAUTOSAR denes boolean as the shortest supported un
+signed Integer Platform Types PLATFORM027 SOMEIP uses 8 Bits c
+6242 Structured Datatypes structs
+TRSOMEIP00071 dThe serialization of a struct shall be close to the inmemory
+layout This means only the parameters shall be serialized sequentially into the buffer
+Especially for structs it is important to consider the correct memory alignment Insert
+reservedpadding elements in the interface denition if needed for alignment since the
+SOMEIP implementation shall not automatically add such padding c
+TRSOMEIP00072 dSo if for example a struct includes an uint8 and an uint32
+they are just written sequentially into the buffer This means that there is no padding
+between the uint8 and the rst byte of the uint32 therefore the uint32 might not be
+allignedc
+TRSOMEIP00073 dIf a SOMEIP generator or similar encounters an interface
+specication that leads to an PDU not correctly aligned eg because of an unaligned
+struct the SOMEIP generator shall warn about a misaligned struct but shall not fail in
+generating the code c
+22 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00074 dWarning about unaligned structs or similar shall not be done
+in the implemenation but only in the toolchain used to generate the implementation c
+TRSOMEIP00075 dMessages of legacy busses like CAN and FlexRay may never
+be aligned Warnings can be turned off or be ignored in such cases c
+TRSOMEIP00076 dA struct shall be serialized exactly as specied c
+TRSOMEIP00077 dThe SOMEIP implementation shall not automatically insert
+dummypadding elements c
+TRSOMEIP00078 d
+Struct1 
+uint32 a 
+float32 b2 
+Struct2 c Struct2 
+uint32 d 
+float32 e2
+Struct3 fserialization uint32 a 
+float32 b1 
+float32 b2 
+uint32 d 
+float32 e1 
+float32 e2 
+
+Figure 62 Serialization of Structs
+c
+TRSOMEIP00079 dThe interface specication may add a length eld of 8 16 or
+32 Bit in front of the Struct c
+TRSOMEIP00080 dIf the length of the length eld is not specied a length of 0
+has to be assumed and no length eld is in the message c
+TRSOMEIP00081 dThe length eld of the struct describes the number of bytes of
+the struct If the length is greater than the length of the struct as specied in the Inter
+face Denition only the bytes specied in the Interface Specication shall be interpreted
+and the other bytes shall be skipped based on the length eld
+This allows for extensible structs which allow better migration of interfaces c
+23 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6243 Strings xed length
+TRSOMEIP00082 dStrings are encoded using Unicode and are terminated with a
+0character despite having a xed length The length of the string this includes the
+0 in Bytes has to be specied in the interface denition Fill unused space using
+0c
+TRSOMEIP00083 dDifferent Unicode encoding shall be supported including UTF
+8 UTF16BE and UTF16LE Since these encoding have a dynamic length of bytes
+per character the maximum length in bytes is up to three times the length of characters
+in UTF8 plus 1 Byte for the termination with a  0 or two times the length of the
+characters in UTF16 plus 2 Bytes for a  0c
+TRSOMEIP00084 dUTF16LE and UTF16BE strings shall be zero terminated
+with a  0 character This means they shall end with at least two 0x00 Bytes c
+TRSOMEIP00085 dUTF16LE and UTF16BE strings shall have an even length c
+TRSOMEIP00086 dFor UTF16LE and UTF16BE strings having a odd length the
+last byte shall be ignored The two bytes before shall be 0x00 bytes termination c
+TRSOMEIP00087 dAll strings must always start with a Byte Order Mark BOM
+The BOM must be included in xedlengthstrings as well as dynamiclength strings c
+TRSOMEIP00088 dThe receiving SOMEIP implementation shall check the BOM
+against the Interface Specication and might need to handle this as an error based on
+this specication c
+TRSOMEIP00089 dThe BOM may be added by the application or the SOMEIP
+implementationc
+TRSOMEIP00090 dThe String encoding shall be specied in the interface deni
+tionc
+6244 Strings dynamic length
+TRSOMEIP00091 dStrings with dynamic length start with a length eld The length
+is measured in Bytes and is followed by the  0terminated string data The interface
+denition shall also dene the maximum number of bytes the string including termina
+tion with  0 can occupyc
+TRSOMEIP00092 dTRSOMEIP00084 TRSOMEIP00085 and
+TRSOMEIP00086 shall also be valid for strings with dynamic length c
+TRSOMEIP00093 dThe length of the length eld may be 8 16 or 32 Bit Fixed
+length strings may be seen as having a 0 Bit length eld c
+TRSOMEIP00094 dIf not specied otherwise in the interface specication the
+length of the length eld is 32 Bit default length of length eld c
+24 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00095 dThe length of the Strings length eld is not considered in the
+value of the length eld ie the length eld does not count itself c
+TRSOMEIP00096 dSupported encodings are dened as in Chapter 6243 c
+TRSOMEIP00097 dIf the interface denition hints the alignment of the next data
+element the string shall be extended with  0 characters to meet the alignment c
+6245 Arrays xed length
+TRSOMEIP00098 dThe length of xed length arrays is dened by the interface
+denition They can be seen as repeated elements In Chapter 6247 dynamic length
+arrays are shown which can be also used However xed length arrays can easier be
+used in very small devices thus both options are being supported c
+62451 Onedimensional
+TRSOMEIP00099 dThe onedimensional arrays with xed length n carry exactly n
+elements of the same type The layout is shown in Figure 63 c
+TRSOMEIP00100 d
+Static  Array an  
+Element1  Element2  Element3  Elementn  
+ 
+element  size e 
+n  e  
+Figure 63 Onedimensional array xed length
+c
+62452 Multidimensional
+TRSOMEIP00101 dThe serialization of multidimensional arrays follows the in
+memory layout of multidimensional arrays in the C programming language row
+major order and is shown in Figure 64 c
+TRSOMEIP00102 d
+25 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Static  Array anm  
+Element1  Element2  Elementn  
+ 
+e 
+n   m  e   E11 E12  E1m 
+m  e  
+Figure 64 Multidimensional array xed length
+c
+62453 AUTOSAR Specics
+TRSOMEIP00103 dConsult AUTOSAR SWS RTE chapter 5344 for Arrays c
+6246 Optional Fields
+TRSOMEIP00105 dOptional Fields shall be encoded as array with 0 to 1 elements
+For the serialization of arrays with dynamic length see Chapter 6247 c
+6247 Dynamic Length Arrays
+TRSOMEIP00106 dThe layout of arrays with dynamic length basically is based on
+the layout of xed length arrays To determine the size of the array the serialization
+adds a length eld default length 32 bit in front of the data which counts the bytes
+of the array The length does not include the size of the length eld Thus when
+transporting an array with zero elements the length is set to zero c
+TRSOMEIP00107 dThe Interface Denition may dene the length of the length
+eld Length of 0 8 16 and 32bit are allowed If the length is set to 0 Bits the number
+of elements in the array has to be xed thus being an array with xed length c
+TRSOMEIP00108 dThe layout of dynamic arrays is shown in 65 and Figure 66
+c
+TRSOMEIP00109 d
+26 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Element1   
+element  size e 
+n Bytes  Length  n 
+32 Bit  Element2  Element3  Elementn  
+Figure 65 Onedimensional array dynamic length
+c
+TRSOMEIP00110 dIn the onedimensional array one length eld is used which
+carries the number of bytes used for the array c
+TRSOMEIP00111 dThe number of static length elements can be easily calculated
+by dividing by the size of an element c
+TRSOMEIP00112 dIn the case of dynamical length elements the number of ele
+ments cannot be calculated but the elements must be parsed sequentially c
+TRSOMEIP00113 d
+Elementa1jk1  
+L1 Bytes  Length n  
+32 Bit  E11 E12 E1k1   L1 Elementa2jk2  
+E11 E12 E1k2   L2 
+32 Bit   
+L2 Bytes  32 Bit  
+n Bytes  
+Figure 66 Multidimensional array dynamic length
+c
+TRSOMEIP00114 dIn multidimensional arrays multiple length elds are needed c
+TRSOMEIP00115 dThe interface denition should dene the maximal length of
+each dimension in order to allow for static buffer size allocation by AUTOSAR COM c
+Rationale When measuring the length in Bytes complex multidimensional arrays can
+be skipped over in deserialization
+27 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6248 Enumeration
+TRSOMEIP00117 dThe interface denition might specify an enumeration based
+on unsigned integer datatypes uint8 uint16 uint32 uint64 c
+6249 Union  Variant
+TRSOMEIP00118 dA union also called variant is a parameter that can contain
+different types of elements For example if one denes a union of type uint8 and type
+uint16 the union may carry an element of uint8 or uint16 It is clear that that when using
+different types of elements the alignment of subsequent parameters may be distorted
+To resolve this padding might be needed c
+TRSOMEIP00119 dThe default serialization layout of unions in SOMEIP is as
+follows
+Length eld 32 bit
+Type eld 32 bit
+Element including padding sizeofpadding  length  sizeofelement
+c
+TRSOMEIP00120 dThe order of the length and type eld may be adjusted
+by the interface specication If this is not specied the default layout as in
+TRSOMEIP00119 shall be used c
+TRSOMEIP00121 dThe length of the length eld shall be dened by the Interface
+Specication and shall be 32 16 8 or 0 bits c
+TRSOMEIP00122 dAn length eld of 0 Bit means that no length eld will be written
+to the PDUc
+TRSOMEIP00123 dIf the length eld is 0 Bit all types in the union shall be of the
+same lengthc
+TRSOMEIP00124 dIf the interface specication denes a union with a length eld
+of 0 Bits and types with different length a SOMEIP implementation shall warn about
+this and use the length of the longest element and pad all others with zeros 0x00 c
+TRSOMEIP00125 dIf the Interface Specication does not specify the length of the
+length eld for a union 32 bit length of the length eld shall be used c
+TRSOMEIP00126 dThe length eld denes the size element and padding in bytes
+and does not include the size of the length eld and type eld c
+TRSOMEIP00127 dThe length of the type eld may be dened by the Interface
+Specication and may be 32 16 or 8 bits c
+28 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00128 dIf the Interface Specication does not specify the length of the
+type eld of a union 32 bit length of the type eld shall be used c
+TRSOMEIP00129 dThe type eld describes the type of the element Possible val
+ues of the type eld are dened by the interface specication for each union separately
+The types are encoded as in the interface specication in ascending order starting with
+1 The 0 is reserved for the NULL type  ie an empty union The Interface Denition
+migth also allow the usgae of NULL c
+TRSOMEIP00130 dThe element is serialized depending on the type in the type
+eld In conjunction with the length eld padding can be added behind the element
+The deserializer shall skip bytes according to the length eld The value of the length
+eld for each type shall be dened by the interface specication c
+TRSOMEIP00131 dBy using a struct different padding layouts can be achieved c
+62491 Example Union of uint8uint16 both padded to 32 bit
+TRSOMEIP00132 dIn this example a length of the length eld is specied as 32
+Bits The union shall support a uint8 and a uint16 as elements Both are padded to the
+32 bit boundary length4 c
+TRSOMEIP00133 dA uint8 will be serialized like this
+Length  4 Bytes
+Type  1
+uint8 Padding 0x00 Padding 0x00 Padding 0x00
+c
+TRSOMEIP00134 dA uint16 will be serialized like this
+Length  4 Bytes
+Type  2
+uint16 Padding 0x00 Padding 0x00
+c
+62410 Example Map  Dictionary
+TRSOMEIP00135 dMaps or dictionaries can be easily described as an array of
+keyvaluepairs The most basic way to implement a map or dictionary would be an
+array of a struct with two elds key and value Since the struct has no length eld this
+is as efcient as a special map or dictionary type could be When choosing key and
+value as uint16 a serialized map with 3 entries looks like this
+29 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Length  12 Bytes
+key0 value0
+key1 value1
+key2 value2
+c
+63 RPC Protocol specication
+This chapter describes the RPC protocol of SOMEIP 
+631 Transport Protocol Bindings
+TRSOMEIP00137 dIn order to transport SOMEIP messages of IP different trans
+port protocols may be used SOMEIP currently supports UDP and TCP  Their bindings
+are explained in the following sections while Chapter 64 discusses which transport
+protocol to choose c
+TRSOMEIP00138 dIf a server runs different instances of the same service mes
+sages belonging to different service instances shall be mapped to the service instance
+by the transport protocol port on the server side c
+6311 UDP Binding
+TRSOMEIP00139 dThe UDP binding of SOMEIP is straight forward by trans
+porting SOMEIP messages in UDP packets The SOMEIP messages shall not be
+fragmented Therefore care shall be taken that SOMEIP messages are not too big
+ie up to 1400 Bytes of SOMEIP payload Messages with bigger payload shall not be
+transported over UDP but with eg TCP  c
+TRSOMEIP00140 dThe header format allows transporting more than one
+SOMEIP message in a single UDP packet The SOMEIP implementation can easily
+identify the end of a SOMEIP message by means of the SOMEIP length eld Based
+on the UDP lengths eld SOMEIP can determine if there are additional SOMEIP mes
+sages in the UDP packet c
+TRSOMEIP00141 dEach SOMEIP payload shall have its own SOMEIP header
+c
+TRSOMEIP00142 dThe receiving SOMEIP implementation must be able to re
+ceive unaligned SOMEIP messages transported by UDP or TCP  c
+30 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Rationale When transporting multiple SOMEIP payloads in UDP or TCP the alignment
+of the payloads can be only guaranteed if the length of every payloads is a multiple of
+the alignment size eg 32 bits
+63111 AUTOSAR specic
+TRSOMEIP00145 dBased on the Socket Adaptor concept AUTOSAR can divide
+an incoming UDP packet into different IPDUs However not all AUTOSAR implemen
+tations are currently able to combine different IPDUs and send an UDPPacket with
+more than one SOMEIP message c
+6312 TCP Binding
+TRSOMEIP00146 dThe TCP binding of SOMEIP is heavily based on the UDP
+binding In contrast to the UDP binding the TCP binding allows much bigger SOMEIP
+messages and the transport of SOMEIP messages after each other pipelining c
+TRSOMEIP00147 dEvery SOMEIP payload shall have its own SOMEIP header
+c
+TRSOMEIP00148 dIn order to lower latency and reaction time Nagles algorithm
+shall be turned off TCPNODELAY c
+TRSOMEIP00149 dWhen the TCP connection is lost outstanding requests should
+be handled as timeouts Since TCP handles reliability additional means of reliability
+are not needed Error handling is discussed in detail in Chapter 636 c
+TRSOMEIP00150 dThe client and server shall use a single TCP connection for all
+methods events and notications of a service instance When having more than one
+instance of a service a TCP connection per services instance is needed c
+TRSOMEIP00151 dThe TCP connection shall be used for as many services as
+possible to minimize the number of TCP connections between the client and the server
+basically only one connection per TCP port of server c
+TRSOMEIP00152 dThe TCP connection shall be opened by the client when the
+rst method call shall be transport or the client tries to receive the rst notications
+Whatever happends rst c
+TRSOMEIP00153 dThe client is responsible for reestablishing the TCP connection
+whenever it fails c
+TRSOMEIP00522 dThe TCP connection shall be closed by the client when the
+TCP connection is not required anymore c
+TRSOMEIP00523 dThe TCP connection shall be closed by the client when all
+Services the TCP connections was used for are not available anymore stopped or
+time outc
+31 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00524 dThe server shall not stop the TCP connection when stoppping
+all services the TCP connection was used for but give the client enough time to process
+the control data to shutdown the TCP connection itself c
+Rational
+When the server shutsdown the TCP connection before the client recognized that the
+TCP is not needed anymore the client will try to reestablish the TCP connection
+63121 Allowing resync to TCP stream using Magic Cookies
+TRSOMEIP00154 dIn order to allow resynchronization to SOMEIP over TCP in
+testing and integration scenarios the SOMEIP Magic Cookie Message Figure 67
+shall be used between SOMEIP messages over TCP  c
+TRSOMEIP00155 dBefore the rst SOMEIP message transported in a TCP seg
+ment the SOMEIP Magic Cookie Message shall be included c
+TRSOMEIP00156 dThe implementation shall only include up to one SOMEIP
+Magic Cookie Message per TCP segment c
+TRSOMEIP00157 dIf the implementation has no appropriate access to the mes
+sage segmentation mechanisms and therefore cannot fullll TRSOMEIP00155 and
+TRSOMEIP00156 the implementation shall include SOMEIP Magic Cookie Mes
+sages based on the following heuristic c
+TRSOMEIP00158 dAdd SOMEIP Magic Cookie Message once every 10 seconds
+to the TCP connection as long as messages are transmitted over this TCP connection
+c
+TRSOMEIP00159 dThe layout of the Magic Cookie Message is based on
+SOMEIP  The elds are set as follows
+Service ID  0xFFFF
+Method ID  0x0000 for the direction Client to Server
+Method ID  0x8000 for the direction Server to Client
+Length  0x0000 0008
+Client ID  0xDEAD
+Session ID  0xBEEF
+Protocol Version as specied above TRSOMEIP00052
+Interface Version  0x01
+Message Type  0x01 for Client to Server Communication or 0x02 for Server
+to Client Communication
+Return Code  0x00
+32 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+c
+TRSOMEIP00160 dThe layout of the Magic Cookie Messages is shown in
+Figure 67c
+TRSOMEIP00161 d
+Protocol Version 8 bit
+0x01 Interface Version 8 bit
+0x01 Message Type 8 bit
+0x01 Return Code 8 bit
+0x00 Request ID Client ID  Session ID 32 bit
+ 0xDEAD BEEF Length 32 bit
+ 0x0000 0008 Message ID Service ID  Method ID 32 bit
+ 0xFFFF 0000 012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Covered
+by Length
+Protocol Version 8 bit
+0x01Interface Version 8 bit
+0x01Message Type 8 bit
+0x02Return Code 8 bit
+0x00Request ID Client ID  Session ID 32 bit
+ 0xDEAD BEEFLength 32 bit
+ 0x0000 0008Message ID Service ID  Method ID 32 bit
+ 0xFFFF 8000 012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Co vered
+by LengthClient Server
+Server Client 
+Figure 67 SOMEIP Magic Cookie Message for SOMEIP
+c
+6313 Multiple ServiceInstances
+TRSOMEIP00162 dServiceInstances of the same Service are identied through
+different Instance IDs Multiple ServiceInstances may reside on different ECUs and
+also multiple ServiceInstances of one or more Services may reside on one single ECU
+c
+TRSOMEIP00163 dWhile different Services can share the same L4port number
+multiple ServiceInstances of the same service on one single ECU shall listen on dif
+ferent ports per ServiceInstance c
+Rationale While Instance IDs are used for Service Discovery they are not contained
+in the SOMEIP header where the data is transported
+TRSOMEIP00165 dA Service Instance can be identied through the combina
+tion of the Service ID combined with the socket ie IPaddress transport protocol
+33 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+UDPTCP and port number It is recommended that instances use the same port
+number for UDP and TCP  If a service instance uses UDP port x only this instance of
+the service and not another instance of the same service should use exactly TCP port
+x for its services c
+632 RequestResponse Communication
+TRSOMEIP00166 dOne of the most common communication patterns is the re
+questresponse pattern One communication partner in the following called the client
+sends a request message which is answered by another communication partner the
+serverc
+TRSOMEIP00167 dFor the SOMEIP request message the client has to do the
+following for payload and header
+Construct the payload
+Set the Message ID based on the method the client wants to call
+Set the Length eld to 8 bytes for the second part of the SOMEIP header 
+length of the serialized payload
+Optionally set the Request ID to a unique number shall be unique for client only
+Set the Protocol Version according TRSOMEIP00052
+Set the Interface Version according to the interface denition
+Set the Message Type to Request ie 0x00
+Set the Return Code to 0x00
+c
+TRSOMEIP00168 dThe server builds it header based on the header of the client
+and does in addition
+Construct the payload
+Set the length to the 8 Bytes  new payload size
+Set the Message Type to RESPONSE ie 0x80 or ERROR ie 0x81
+Set the Return Code
+c
+6321 AUTOSAR Specic
+TRSOMEIP00169 dAUTOSAR may implement RequestResponse by means of
+the ClientServerFunctionality For some implementations it might be necessary to im
+34 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+plement the interECU communication by means of the SenderReceiverFunctionality
+In this case the semantics and syntax of the PDU shall not differ to this specication c
+633 FireForget Communication
+TRSOMEIP00170 dRequests without response message are called reforget
+The implementation is basically the same as for RequestResponse with the following
+differences
+There is no response message
+The message type is set to REQUESTNORETURN ie 0x01
+c
+TRSOMEIP00171 dreforget messages do no return an error Error handling
+and return codes shall be implemented by the application when needed c
+6331 AUTOSAR Specic
+TRSOMEIP00172 dreforget should be implemented using the SenderReceiver
+Functionalityc
+634 Notication
+TRSOMEIP00173 dNotications describe a general PublishSubscribeConcept
+Usually the server publishes a service to which a client subscribes On certain events
+the server will send the client a event which could be for example an updated value or
+an event that occurred c
+TRSOMEIP00174 dSOMEIP is used only for transporting the updated value and
+not for the publishing and subscription mechanisms These mechanisms are imple
+mented by SOMEIPSD and are explained in Chapter 6342 c
+TRSOMEIP00175 dWhen more than one subscribed client on the same ECU ex
+ists the system shall handle the replication of notications in order to save transmis
+sions on the communication medium This is especially important when notications
+are transported using multicast messages c
+6341 Strategy for sending notications
+TRSOMEIP00176 dFor different use cases different strategies for sending notica
+tions are possible and shall be dened in the service interface The following examples
+are common
+35 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Cyclic update  send an updated value in a xed interval eg every 300 ms
+Update on change  send an update as soon as a value changes eg door
+open
+Epsilon change  only send an update when the difference to the last value is
+greater than a certain epsilon This concept may be adaptive ie the prediction is
+based on a history thus only when the difference between prediction and current
+value is greater than epsilon an update is transmitted
+c
+6342 PublishSubscribe Handling
+TRSOMEIP00177 dPublishSubscribe handling shall be implemented according
+to Chapter 677 c
+6343 AUTOSAR Specic
+TRSOMEIP00178 dNotications are transported with AUTOSAR
+SenderReceiverFunctionality In case of different notication receivers within
+an ECU the replication of notication messages can be done for example in the RTE
+This means a eventnotication message shall be only sent once to ECU with multiple
+receipientsc
+635 Fields
+TRSOMEIP00179 dA eld shall be a combination of an optional getter an optional
+setter and an optional notication event c
+TRSOMEIP00180 dA eld shall have at least 1 getter or 1 setter or 1 notication
+eventc
+TRSOMEIP00181 dThe getter of a eld shall be a requestresponse call that has
+an empty payload in the request mesage and the value of the eld in the payload of
+the response message c
+TRSOMEIP00182 dThe setter of a eld shall be a requestresponse call that has
+the desired valued of the eld in the payload of the request message and the value that
+was set to eld in the payload of the response message c
+TRSOMEIP00183 dThe noter shall sent an event message that transports the
+value of a eld on change and follows the rules for events c
+36 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+636 Error Handling
+TRSOMEIP00184 dThe error handling can be done in the application or the com
+munication layer below Therefore different possible mechanisms exist c
+6361 Transporting Application Error Codes and Exceptions
+TRSOMEIP00185 dFor the error handling two different mechanisms are sup
+ported All messages have a return code eld to carry the return code However
+only responses Message Types 0x80 and 0x81 use this eld to carry a return code
+to the request Message Type 0x00 they answer All other messages set this eld to
+0x00 see Chapter 6237 For more detailed errors the layout of the Error Message
+Message Type 0x81 can carry specic elds for error handling eg an Exception
+String Error Messages are sent instead of Response Messages c
+TRSOMEIP00186 dThis can be used to handle all different application errors that
+might occur in the server In addition problems with the communication medium or
+intermediate components eg switches may occur which have to be handled eg by
+means of reliable transport c
+6362 Return Code
+TRSOMEIP00187 dThe Error Handling is based on an 8 Bit StdreturnType of
+AUTOSAR The two most signicant bits are reserved and shall be set to 0 The
+receiver of a return code shall ignore the values of the two most signicant bits c
+TRSOMEIP00188 dThe system shall not return an error message for eventsnoti
+cationsc
+TRSOMEIP00189 dThe system shall not return an error message for reforget
+methodsc
+TRSOMEIP00190 dFor requestresponse methods the error message shall copy
+over the elds of the SOMEIP header ie Message ID Request ID Protocol Version
+and Interface Version but not the payload In addition Message Type and Return Code
+have to be set to the appropriate values c
+TRSOMEIP00191 dThe following Return Codes are currently dened and shall be
+implemented as described
+ID Name Description
+0x00 EOK No error occurred
+0x01 ENOTOK An unspecied error occurred
+0x02 EUNKNOWNSERVICE The requested Service ID is unknown
+0x03 EUNKNOWNMETHOD The requested Method ID is unknown Ser
+vice ID is known
+37 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+0x04 ENOTREADY Service ID and Method ID are known Ap
+plication not running
+0x05 ENOTREACHABLE System running the service is not reach
+able internal error code only
+0x06 ETIMEOUT A timeout occurred internal error code
+only
+0x07 EWRONGPROTOCOL
+VERSIONVersion of SOMEIP protocol not supported
+0x08 EWRONGINTERFACE
+VERSIONInterface version mismatch
+0x09 EMALFORMEDMESSAGE Deserialization error eg length or type
+incorrect
+0x09 
+0x1fRESERVED Reserved for generic SOMEIP errors
+These errors will be specied in future ver
+sions of this document
+0x20 
+0x3fRESERVED Reserved for specic errors of services and
+methods These errors are specied by the
+interface specication
+c
+TRSOMEIP00192 dGeneration and handling of return codes shall be congurable
+c
+6363 Error Message Format
+TRSOMEIP00194 dFor a more exible error handling SOMEIP allows the user
+to specify a message layout specic for errors instead of using the message layout for
+response messages This is dened by the interface specication and can be used to
+transport exceptions of higher level programming languages c
+TRSOMEIP00195 dThe recommended layout for the exception message is the
+following
+Union of specic exceptions At least a generic exception without elds needs to
+exist
+Dynamic Length String for exception description
+c
+TRSOMEIP00196 dThe union gives the exibility to add new exceptions in the
+future in a typesafe manner The string is used to transport human readable exception
+descriptions to ease testing and debugging c
+38 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6364 Communication Errors and Handling of Communication Errors
+TRSOMEIP00197 dWhen considering the transport of RPC messages different
+reliability semantics exist
+Maybe  the message might reach the communication partner
+At least once  the message reaches the communication partner at least once
+Exactly once  the message reaches the communication partner exactly once
+c
+TRSOMEIP00198 dWhen using these terms in regard to RequestResponse the
+term applies to both messages ie request and response or error c
+TRSOMEIP00199 dWhile different implementations may implement different ap
+proaches SOMEIP currently achieves maybe reliability when using the UDP binding
+and exactly once reliability when using the TCP binding Further error handling is left
+to the application c
+TRSOMEIP00200 dFor maybe reliability only a single timeout is needed when
+using requestresponse communication in combination of UDP as transport protocol
+Figure 68 shows the state machines for maybe reliability The clients SOMEIP
+implementation has to wait for the response for a specied timeout If the timeout
+occurs SOMEIP shall signal ETIMEOUT to the client c
+TRSOMEIP00201 d
+processingreqReceived waitingForResponse  sendReq rspReceived 
+rspTimeout 
+ sendRspError NoResponse Client 
+Server
+Figure 68 State Machines for Reliability Maybe
+c
+TRSOMEIP00202 dFor exactly once reliability the TCP binding may be used
+since TCP was dened to allow for reliable communication c
+TRSOMEIP00203 dAdditional mechanisms to reach higher reliability may be im
+plemented in the application or in a SOMEIP implementation Keep in mind that the
+39 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+communication does not have to implement these features Chapter 63641 de
+scribes such optional reliability mechanisms c
+63641 Application based Error Handling
+TRSOMEIP00204 dThe application can easily implement at least once reliability
+by using idempotent operations ie operation that can be executed multiple times
+without side effects and using a simple timeout mechanism Figure 69 shows the
+state machines for at least once reliability using implicit acknowledgements When
+the client sends out the request it starts a timer with the timeout specied for the specic
+method If no response is received before the timer expires round transition at the
+top the client will retry the operation A Typical number of retries would be 2 so that
+3 requests are sent c
+TRSOMEIP00205 dThe number of retries the timeout values and the timeout
+behavior constant or exponential back off are outside of the SOMEIP specication
+and may be added to the interface denition c
+TRSOMEIP00206 d
+processingreqReceived  sendReqsetResTimertrCnt0
+waitingForResponse rspReceived 
+Error NoResponse ntimeoutCounter ntimeoutCounter  sendReqresetResTimer 
+ sendRspClient 
+Server 
+Figure 69 State Machines for Reliability At least once idempotent operations
+c
+64 Guidelines on SOMEIP
+641 Choosing the transport protocol
+TRSOMEIP00207 dSOMEIP directly supports the two most used transport proto
+cols of the Internet User Datagram Protocol UDP and Transmission Control Protocol
+TCP While UDP is a very lean transport protocol supporting only the most important
+features multiplexing and error detecting using a checksum TCP adds additional fea
+40 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+tures for achieving a reliable communication TCP can not only handle bit errors but
+also segmentation loss duplication reordering and network congestion thus TCP is
+the more powerful transport protocol c
+TRSOMEIP00208 dFor use inside the vehicle requirements are not the same as
+for the Internet For many applications we require a very short timeout to react in a
+very short time These requirements are better met using UDP because the application
+itself can handle the unlikely event of errors For example in use cases with cyclic
+data it is often the best approach to just wait for the next data transmission instead of
+trying to repair the last one The major disadvantage of UDP is that it does not handle
+segmentation thus only being able to transport smaller chunks of data c
+TRSOMEIP00209 dGuideline
+Use UDP if very hard latency requirements 100ms in case of errors is needed
+Use TCP only if very large chunks of data need to be transported  1400 Bytes
+and no hard latency requirements in the case of errors exists
+Try using external transport Network File System APIX link 1722  when
+more suited for the use case Just transport le handle or similar This gives the
+designer more freedom caching etc
+c
+TRSOMEIP00210 dThe transport protocol used is specied by the interface spec
+ication on a permessage basis Methods Events and Fields should commonly only
+use a single transport protocol c
+642 Implementing Advanced Features in AUTOSAR Applications
+TRSOMEIP00211 dUnfortunately not all features of SOMEIP can be directly sup
+ported within this release of AUTOSAR eg dynamic length arrays In the uncommon
+case that an advanced feature is needed within an AUTOSAR implementation not sup
+porting it directly a solution exists The advanced feature shall be implemented inside
+the application by passing the SOMEIP payload or parts of it by means of a uint8 buffer
+through AUTOSAR For AUTOSAR the elds seem to be just a dynamic length uint8
+array and shall be congured accordingly c
+643 Serialization of Data Structures Containing Pointers
+TRSOMEIP00213 dFor the serialization of data structures containing pointers eg
+a tree in memory the pointers cannot be just transferred using a data type eg uint8
+but shall be converted for transport Different approaches for the serialization of point
+ers exist We recommend the following approaches c
+41 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6431 Array of data structures with implicit ID
+TRSOMEIP00214 dWhen transporting a set of data structures with pointers that
+is small enough to t into a single RPC message
+Store data structures eg tree nodes in array
+Use position in array as ID of stored data structure
+Replace pointers with IDs of the data structures pointed to
+c
+6432 Array of data structures with explicit ID
+TRSOMEIP00215 dWith larger sets of data structures additional problems have to
+be resolved Since not all data structures t into a single message the IDs have to be
+unique over different messages This can be achieved in different ways
+Add an offset eld to every message The ID of an array element will be calcu
+lated by adding the offset to its position in the array Keep in mind that the offset
+needs to be carefully been chosen If for example every message can contain up
+to ten data structures 09 the offset could be chosen as 0 10 20 30 and so
+on
+Store an explicit ID by using an array of structs The rst eld in the struct will be
+an ID eg uint32 and the second eld the data structure itself For security and
+reliability reasons the pointer ie the memory address should never be used
+directly as ID
+c
+65 Compatibility rules for Interface Design informational
+TRSOMEIP00216 dAs for all serialization formats migration towards a newer ser
+vice interface is somewhat limited Using a set of compatibility rules SOMEIP allows
+for evolution of service interfaces One can do the following additions and enhance
+ments in a nonbreaking way
+Add new method to a service
+Shall be implemented at server rst
+Add parameter to the end of a methods in or out parameters
+When the receiver adds them rst a default value has to be dened
+When the sender adds them rst the receiver will ignore them
+42 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Add an exception to the list of exceptions a method can throw
+Should update client rst
+If exception is unknown unknown exception needs to thrown The exception
+description string however can be copied over
+Add new type to union
+Should update receiver rst
+Can be skipped if unknown sender updates rst
+Dene a new data type for new methods
+Dene a new exception for new methods
+c
+TRSOMEIP00217 dNot of all these changes can be introduced at the client or
+server side rst In some cases only the client or server can be changed rst For
+example when sending an additional parameter with a newer implementation the older
+implementation can only skip this parameter c
+TRSOMEIP00218 dWhen the receiver of a message adds for example a new
+parameter to be received it has to dene a default value This is needed in the case of
+a sender with an older version of the service sends the message without the additional
+parameterc
+TRSOMEIP00219 dSome changes in the interface specication can be imple
+mented in a nonbreaking way
+Delete Parameters in Functions
+Need to add default value rst at receiver rst and parameters need to be at
+end of list
+Remove Exceptions from functions
+Trivial at server side
+Client needs to throw unknown exception if encountering old exception
+Renaming parameters functions and services is possible since the names are
+not transmitted The generated code only looks at the IDs and the ordering of
+parameters which shall not be changed in migration
+c
+TRSOMEIP00220 dIf the struct is congured by the interface specication to have
+a length eld the following is possible
+Adding  deleting elds tofrom the end of structs
+c
+43 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00221 dCurrently not supported are the following changes
+Reordering parameters
+Replace supertype by subtype as in object oriented programming languages
+c
+66 Transporting CAN and FlexRay Frames
+TRSOMEIP00222 dSOMEIP should not be used to simply transport CAN or
+FlexRay frames However the Message ID space needs to be coordinated between
+both use casesc
+TRSOMEIP00223 dThe full SOMEIP Header shall be used for transporting
+CANFlexRayc
+TRSOMEIP00224 dThe AUTOSAR SocketAdapter uses the Message ID and
+Length to construct the needed internal PDUs but does not look at other elds There
+fore one has to encode the CAN ID 11 or 29 bits or the FlexRay ID 6611 bits into
+the Message ID eld The CAN ID shall be aligned to the least signicant bit of the
+Message ID An 11 bit CAN identier would be therefore transported in the bit position
+21 to 31 Refer also to TRSOMEIP00232 c
+TRSOMEIP00225 dEspecially with the use of 29 Bit CANIDs or FlexRayIDs a lot
+of the Message ID space is used In this case it is recommended to bind SOMEIP
+and CANFlexRay transports to different transport protocol ports so that different ID
+spaces for the Message IDs exist c
+TRSOMEIP00226 dKeep in mind that when transporting a CAN frame of 8 Byte
+over Ethernet an overhead of up to 100 Bytes might be needed in the near future using
+IPv6 andor security mechanisms So it is recommended to use larger RPC calls as
+shown in the rst part of the document instead of small CAN like communication c
+TRSOMEIP00227 dClient ID and Session ID shall be set to 0x0000 c
+TRSOMEIP00228 dDepending on the direction the Message Type shall be set to
+0x02 service provider sends or 0x00 service provider receives The Return Code
+shall be always set to 0x00
+c
+TRSOMEIP00229 dAt least for 11 Bit CANIDs the layout of the Message ID shall
+be followed TRSOMEIP00038 and TRSOMEIP00040 This means that the 16th
+bit from the left shall be set to 0 or 1 according to the Message ID 0x00 or 0x02 c
+TRSOMEIP00230 dProtocol Version shall be set according to
+TRSOMEIP00052 c
+TRSOMEIP00231 dInterface Version shall be set according to interface specica
+tionsc
+44 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00232 dIf SOMEIP is used for transporting CAN messages with 11
+Bits of CANID the following layout of the Message ID may be used example
+Service ID shall be set to a value dened by the system department eg 0x1234
+Event ID is split into 4 Bits specifying the CAN bus and 11 Bits for the CANID
+This is just an example and the actual layout shall be specied by the System Depart
+mentc
+661 AUTOSAR specic
+TRSOMEIP00233 dSome AUTOSARimplementations currently do not allow for
+sending more than one CAN or FlexRay frame inside an IP packet All AUTOSAR
+implementations shall allow receiving more than one CAN or FlexRay frame inside an
+IP packet by use of the length eld c
+67 SOMEIP Service Discovery SOMEIPSD
+671 General
+TRSOMEIP00234 dService Discovery is used to locate service instances and to
+detect if service instances are running as well as PublishSubscribe handling c
+TRSOMEIP00235 dInside the vehicular network service instance locations are
+commonly known therefore the state of the service instance is of primary concern
+The location of the service ie IPAddress transport protocol and port number are
+of secondary concern c
+6711 Terms and Denitions
+TRSOMEIP00236 dServerServiceInstanceEntry shall include one Interface
+Identier of the interface the service is offered on c
+TRSOMEIP00237 dClientServiceInstanceEntry shall include one Interface Iden
+tier of the interface the service is congured to be accessed with c
+TRSOMEIP00238 dMultiple ServerServiceInstanceEntry entries shall be used
+if a service instance needs to be offered on multiple interfaces c
+TRSOMEIP00239 dMultiple ClientServiceInstanceEntry entries shall be used
+if a service instance needs to be congured to be accessed using multiple different
+interfacesc
+45 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+672 SOMEIPSD ECUinternal Interface
+TRSOMEIP00240 dService status shall be dened as up or down as well as re
+quired and released
+A service status of up shall mean that a service instance is available thus it can
+be accessed using the communication method specied and is able to full its
+specied function
+A service status of down shall mean the opposite of the service status up
+A service status of required shall mean that service instance is needed by another
+software component in the system to function
+A service status of released shall mean the opposite of the service status re
+quired
+The combination of service status updown with requiredreleased shall be sup
+port Four different valid combinations shall exist uprequired upreleased
+downrequired downreleased
+c
+TRSOMEIP00241 dThe Service Discovery Interface shall inform local software
+components about the status of remote services updown c
+TRSOMEIP00242 dThe Service Discovery Interface shall offer the option to local
+software component to require or release a remote service instance c
+TRSOMEIP00243 dThe Service Discovery Interface shall inform local software
+components of the requirerelease status of local services c
+TRSOMEIP00244 dThe Service Discovery Interface shall offer the option to local
+software component to set a local service status updown c
+TRSOMEIP00245 dEventgroup status shall be dened in the same way the service
+status is dened c
+TRSOMEIP00246 dService Discovery shall be used to turn onoff the events and
+notication events of a given eventgroup Only if another ECU requires an eventgroup
+the events and notication events of this eventgroup are sent See Subscribe Event
+Groupc
+TRSOMEIP00247 dThe Service Discovery shall be informed of linkup and link
+down events of logical virtual and physical communication interfaces that the Service
+Discovery is bound to c
+46 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+673 SOMEIPSD Message Format
+6731 General Requirements
+TRSOMEIP00248 dService Discovery messages shall be supported over UDP  c
+TRSOMEIP00250 dService Discovery Messages shall start with a SOMEIP
+header as depicted Figure 610
+Service Discovery messages shall use the ServiceID 16 Bits of 0xFFFF 
+Service Discovery messages shall use the MethodID 16 Bits of 0x8100
+Service Discovery messages shall use a uint32 length eld as specied by
+SOMEIP  That means that the length is measured in bytes and starts with the
+rst byte after the length eld and ends with the last byte of the SOMEIPSD
+message
+Service Discovery messages shall have a ClientID 16 Bits and handle it based
+on SOMEIP rules
+Service Discovery messages shall have a SessionID 16 Bits and handle it
+based on SOMEIP requirements
+The SessionID SOMEIP header shall be incremented for every SOMEIPSD
+message sent
+The SessionID SOMEIP header shall start with 1 and be 1 even after wrapping
+The SessionID SOMEIP header shall not be set to 0
+Service Discovery messages shall have a ProtocolVersion 8 Bits of 0x01
+Service Discovery messages shall have a InterfaceVersion 8 Bits of 0x01
+Service Discovery messages shall have a Message Type 8 bits of 0x02 Noti
+cation
+Service Discovery messages shall have a Return Code 8 bits of 0x00 EOK
+c
+TRSOMEIP00251 d
+47 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Protocol Version 8 bit
+0x01 Interface Version 8 bit
+0x01 Message Type 8 bit
+0x02 Return Code 8 bit
+0x00 Request ID Client ID  Session ID 32 bitLength 32 bitMessage ID Service ID  Method ID 32 bit
+ 0xFFFF 8100 012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Covered by LengthFlags 8 bit Reserved 24 bit
+Length of Entries Array 32 bit
+Entries Array 
+Length of Options Array 32 bit
+Options Array
+Covered by Length Covered by LengthSOMEIP SOMEIP SD
+Figure 610 SOMEIPSD Header Format
+c
+6732 Header
+TRSOMEIP00252 dAfter the SOMEIP header the SOMEIPSD Header shall fol
+low as depicted in Figure 610 c
+TRSOMEIP00253 dThe SOMEIPSD Header shall start out with an 8 Bit eld
+called Flagsc
+TRSOMEIP00254 dThe rst ag of the SOMEIPSD Flags eld highest order bit
+shall be called Reboot Flag c
+TRSOMEIP00255 dThe Reboot Flag of the SOMEIPSD Header shall be set to
+one for all messages after reboot until the SessionID in the SOMEIPHeader wraps
+around and thus starts with 1 again After this wrap around the Reboot Flag is set to 0
+c
+TRSOMEIP00256 dThe information for the reboot ag and the Session ID shall be
+kept for multicast and unicast separately c
+TRSOMEIP00257 dSOMEIPSD implementations shall be able to reliably detect
+the reboots of their peer based on these informations c
+TRSOMEIP00258 dThe detection of a reboot may be done as follows with new
+the values of the current packet from the communication partner and old the last value
+48 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+received before
+if oldreboot0 and newreboot1 then Reboot detected
+if oldreboot1 and newreboot1 and oldsessionidnewsessionid then Reboot
+detected
+The following is not enough since we do not have reliable communication
+if newreboot1 and oldsessionidnewsessionid then Reboot detected
+c
+TRSOMEIP00525 dWhen the system detects the reboot of a peer it shall up
+date its state accordingly Services and Subscriptions shall be expired if they are not
+updated againc
+TRSOMEIP00526 dWhen the system detects the reboot of a peer it shall reset
+the state of the TCP connections to this peer The client shall reestablish the TCP as
+required by the PublishSubscribe process later c
+TRSOMEIP00259 dThe second ag of the SOMEIPSD Flags second highest
+order bit shall be called Unicast Flag and shall be set to 1 if SD message receiption
+via unicast is supported c
+TRSOMEIP00261 dAfter the Flags the SOMEIPSD Header shall have a eld of
+24 bits called Reserved that is set to 0 until further notice c
+TRSOMEIP00262 dAfter the SOMEIPSD Header the Entries Array shall follow c
+TRSOMEIP00263 dThe entries shall be processed exactly in the order they arrive
+c
+TRSOMEIP00264 dAfter the Entries Array in the SOMEIPSD Header an Option
+Array shall follow c
+TRSOMEIP00265 dThe Entries Array and the Options Array of the SOMEIPSD
+message shall start with a length eld as uint32 that counts the number of bytes of the
+following data ie the entries or the options c
+6733 Entry Format
+TRSOMEIP00266 dThe service discovery shall work on different entries that shall
+be carried in the service discovery messages The entries are used to synchronize the
+state of services intances and the PublishSubscribe handling c
+TRSOMEIP00267 dTwo types of entries exist A Service Entry Type for Services
+and an Eventgroup Entry Type for Eventgroups which are used for different entries
+eachc
+TRSOMEIP00268 dA Service Entry Type shall be 16 Bytes of size and include the
+following elds in this order as shown in Figure 611
+49 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Type Field uint8 encodes FindService 0x00 and OfferService 0x01
+Index First Option Run uint8 Index of the option in the option array
+Index Second Option Run uint8 Index of the option in the option array
+Number of Options 1 uint4 Describes the number of options the rst option run
+uses
+Number of Options 2 uint4 Describes the number of options the second option
+run uses
+ServiceID uint16 Describes the ServiceID of the Service or ServiceInstance
+concerned by the SD message
+Instance ID uint16 Describes the ServiceInstanceID of the Service Instance
+concerned by the SD message or is set to 0xFFFF if all service instances of a
+service are meant
+Major Version uint8 Encodes the major version of the service instance
+TTL uint24 Descibes the lifetime of the entry in seconds
+Minor Version uint32 Encodes the minor version of the service
+c
+TRSOMEIP00269 d
+Type 012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Index 1st options Index 2nd options  of opt 1  of opt 2
+Service ID Instance ID
+Major Version TTL
+Minor Version
+Figure 611 SOMEIPSD Service Entry Type
+c
+TRSOMEIP00270 dAn Eventgroup Entry shall be 16 Bytes of size and include the
+following elds in this order as shown in Figure 612
+Type Field uint8 encodes Subscribe 0x06 and SubscribeAck 0x07
+Index First Option Run uint8 Index of the option in the option array
+Index Second Option Run uint8 Index of the option in the option array
+Number of Options 1 uint4 Describes the number of options the rst option run
+uses
+50 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Number of Options 2 uint4 Describes the number of options the second option
+run uses
+ServiceID uint16 Describes the ServiceID of the Service or ServiceInstance
+the Eventgroup of concern is part of
+Instance ID uint16 Describes the ServiceInstanceID of the Service Instance
+the Eventgroup of concern is part of or is set to 0xFFFF if all service instances of
+a service are meant
+Major Version uint8 Encodes the major version of the service instance this
+eventgroup is part of
+TTL uint24 Descibes the lifetime of the entry in seconds
+Reserved uint16 Shall be set to 0x0000
+Eventgroup ID uint16 Transports the ID of an Eventgroup
+c
+TRSOMEIP00271 d
+Type 012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Index 1st options Index 2nd options  of opt 1  of opt 2
+Service ID Instance ID 
+Major Version TTL
+Reserved 0x0000  Eventgroup ID
+Figure 612 SOMEIPSD Eventgroup Entry Type
+c
+6734 Options Format
+TRSOMEIP00272 dOptions are used to transport additional information to the
+entries This can be for instance the information how a service instance is reachable
+IPAddress Transport Protocol Port Number c
+TRSOMEIP00273 dIn order to identify the option type every option shall start with
+Length uint16 Species the length of the option in Bytes
+Type uint8 Specifying the type of the option
+c
+TRSOMEIP00274 dThe length eld shall not cover the length eld and type eld
+c
+51 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+67341 Conguration Option
+TRSOMEIP00275 dThe conguration option may be used to transport abitrary
+conguration strings This allows to encode additional information like the name of a
+service or its conguration c
+TRSOMEIP00276 dThe format of the Conguration Option shall be as follows
+Length uint16 Shall be set to the total number of bytes occupied by the cong
+uration option excluding the 16 bit length eld and the 8 bit type ag
+Type uint8 Shall be set to 0x01
+Reserved uint8 Shall be set to 0x00
+CongurationString dyn length Shall carry the conguration string
+c
+TRSOMEIP00277 dThe Conguration Option shall specify a set of namevalue
+pairs based on the DNS TXT and DNSSD format c
+TRSOMEIP00278 dThe format of the conguration string shall start with a single
+byte length eld that describes the number of bytes following this length eld c
+TRSOMEIP00279 dAfter each character sequence another length eld and a fol
+lowing character sequence are expected until a length eld set to 0x00 c
+TRSOMEIP00280 dAfter a length eld set to 0x00 no characters follow c
+TRSOMEIP00281 dA character sequence shall encode a key and an optionally a
+valuec
+TRSOMEIP00282 dThe character sequences shall contain an equal character
+ 0x03D to devide key and value c
+TRSOMEIP00283 dThe key shall not include an equal character and shall be at
+least one nonwhitespace character The characters of Key shall be printable US
+ASCII values 0x200x7E excluding  0x3D c
+TRSOMEIP00284 dThe  shall not be the rst character of the sequence c
+TRSOMEIP00285 dFor a character sequence without an  that key shall be in
+terpreted as present c
+TRSOMEIP00286 dFor a character sequence ending on an  that key shall be
+interpreted as present with empty value c
+TRSOMEIP00287 dMultiple entries with the same key in a single Conguration
+Option shall be supported c
+TRSOMEIP00288 dThe conguration option shall be also used to encode host
+name servicename and instancename if needed c
+52 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00289 dFigure 613 shows the format of the Conguration Option and
+Figure 614 and example for the Conguration Option c
+TRSOMEIP00290 d
+Type 0x01012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Reserved 0x00 Length 
+Covered by Length
+incl ReservedZeroterminated Configuration String
+lenidvaluelenidvalue0
+Figure 613 SOMEIPSD Conguration Option
+c
+TRSOMEIP00291 d
+Type 0x01012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Reserved 0x00 Length 0x0010 
+Covered by Length
+incl Reserved5 c b a
+ d 7 x
+e 1  f
+2 0 3
+Figure 614 SOMEIPSD Conguration Option Example
+c
+67342 IPv4 Endpoint Option
+TRSOMEIP00304 dThe IPv4 Endpoint Option shall be used by a SOMEIPSD
+instance to signal the relevant endpoints Endpoints include the local IP address the
+transport layer protocol eg UDP or TCP and the port number of the sender
+These ports may be used for the events and notication events as well When using
+UDP the server uses the announced port as source port and with TCP the client needs
+to open a connection to this port before subscription so that the server can use this
+TCP connection c
+TRSOMEIP00305 dThe IPv4 Endpoint Option shall use the Type 0x04 c
+TRSOMEIP00306 dThe IPv4 Endpoint Option shall specify the IPv4Address the
+transport layer protocol ISOOSI layer 4 used and its Port Number c
+TRSOMEIP00307 dThe Format of the IPv4 Endpoint Option shall be as follows
+53 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Length uint16 Shall be set to 0x0009
+Type uint8 Shall be set to 0x04
+Reserved uint8 Shall be set to 0x00
+IPv4Address uint32 Shall transport the IPAddress as four Bytes
+Reserved uint8 Shall be set to 0x00
+L4Proto uint8 Shall be set to the transport layer protocol ISOOSI layer 4
+based on the IANAIETF types 0x06 TCP  0x11 UDP
+L4Port uint16 Shall be set to the port of the transport layer protocol ISOOSI
+layer 4
+c
+TRSOMEIP00308 dFigure 615 shows the format of the IPv4 Endpoint Option c
+TRSOMEIP00309 d
+Type 0x04012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Reserved 0x00 Length 0x0009 
+Covered by Length
+incl ReservedIPv4Address 32bit
+Reserved 0x00 L4Proto TCPUDP Port Number
+Figure 615 SOMEIPSD IPv4 Endpoint Option
+c
+TRSOMEIP00310 dThe server shall use the IPv4 Endpoint Option with Offer Ser
+vice entries to signal the endpoints he serves the service on That is upto one UDP
+endpoint and upto one TCP endpoint c
+TRSOMEIP00311 dThe endpoints the server referenced with an Offer Service
+entry shall also be used source of events That is source IP address and source port
+numbers for the transport protocols in the endpoint option c
+TRSOMEIP00312 dThe client shall use the IPv4 Endpoint Options with Subscribe
+Eventgroup entries to signal his IP address and his UDP andor TCP port numbers he
+is ready to receive the events with c
+67343 IPv6 Endpoint Option
+TRSOMEIP00313 dThe IPv6 Endpoint Option shall be used by a SOMEIPSD
+instance to signal the relevant endpoints Endpoints include the local IP address the
+transport layer protocol eg UDP or TCP and the port number of the sender
+54 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+These ports may be used for the events and notication events as well When using
+UDP the server uses the announced port as source port and with TCP the client needs
+to open a connection to this port before subscription so that the server can use this
+TCP connection c
+TRSOMEIP00314 dThe IPv6 Endpoint Option shall use the Type 0x06 c
+TRSOMEIP00315 dThe IPv6 Endpoint Option shall specify the IPv6Address the
+Layer 4 Protocol used and the Layer 4 Port Number c
+TRSOMEIP00316 dThe Format of the IPv6 Endpoint Option shall be as follows
+Length uint16 Shall be set to 0x0015
+Type uint8 Shall be set to 0x06
+Reserved uint8 Shall be set to 0x00
+IPv6Address uint128 Shall transport the IPAddress as 16 Bytes
+Reserved uint8 Shall be set to 0x00
+L4Proto uint8 Shall be set to the transport layer protocol ISOOSI layer 4
+based on the IANAIETF types 0x06 TCP  0x11 UDP
+L4Port uint16 Shall be set to the port of the transport layer protocol ISOOSI
+layer 4
+c
+TRSOMEIP00317 dFigure 616 shows the format of the IPv6 Endpoint Option c
+TRSOMEIP00318 d
+Type 0x06012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Reserved 0x00 Length 0x0015 
+Covered by Length
+incl Reserved
+Reserved 0x00 L4Proto TCPUDP Port NumberIPv6Address 128bit
+Figure 616 SOMEIPSD IPv6 Endpoint Option
+c
+TRSOMEIP00319 dThe server shall use the IPv6 Endpoint Option with Offer Ser
+vice entries to signal the endpoints he serves the service on That is upto one UDP
+endpoint and upto one TCP endpoint c
+55 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00320 dThe endpoints the server referenced with an Offer Service
+entry shall also be used source of events That is source IP address and source port
+numbers for the transport protocols in the endpoint option c
+TRSOMEIP00321 dThe client shall use the IPv6 Endpoint Option with Subscribe
+Eventgroup entries to signal his IP address and his UDP andor TCP port numbers he
+is ready to receive the events with c
+67344 IPv4 Multicast Option
+TRSOMEIP00322 dThe IPv4 Multicast Option is used by the server to announce
+the IPv4 multicast address the transport layer protocol ISOOSI layer 4 and the port
+number the multicast events and multicast notication events are sent to As transport
+layer protocol currently only UDP is supported c
+TRSOMEIP00323 dThe IPv4 Multicast Option and not the IPv4 Endpoint Option
+shall be referenced by SubscribeEventgroupAck messages c
+TRSOMEIP00324 dThe IPv4 Multicast Option shall use the Type 0x14 c
+TRSOMEIP00325 dThe IPv4 Multicast Option shall specify the IPv4Address the
+transport layer protocol ISOOSI layer 4 used and its Port Number c
+TRSOMEIP00326 dThe Format of the IPv4 Endpoint Option shall be as follows
+Length uint16 Shall be set to 0x0009
+Type uint8 Shall be set to 0x14
+Reserved uint8 Shall be set to 0x00
+IPv4Address uint32 Shall transport the multicast IPAddress as four Bytes
+Reserved uint8 Shall be set to 0x00
+L4Proto uint8 Shall be set to the transport layer protocol ISOOSI layer 4
+based on the IANAIETF types 0x11 UDP
+L4Port uint16 Shall be set to the port of the layer 4 protocol
+c
+TRSOMEIP00327 dFigure 617 shows the format of the IPv4 Multicast Option c
+TRSOMEIP00328 d
+Type 0x14012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Reserved 0x00 Length 0x0009
+Covered by Length
+incl ReservedIPv4Address 32bit
+Reserved 0x00 L4Proto UDP Port Number
+Figure 617 SOMEIPSD IPv4 Multicast Option
+56 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+c
+TRSOMEIP00329 dThe server shall reference the IPv4 Multicast Option stating the
+IPv4 Multicast Address and Port Number he will send multicast events and notication
+events toc
+67345 IPv6 Multicast Option
+TRSOMEIP00330 dThe IPv6 Multicast Option is used by the server to announce
+the IPv6 multicast address the layer 4 protocol and the port number the multicast
+events and multicast notications events are sent to For the transport layer protocol
+ISOOSI layer 4 currently only UDP is supported c
+TRSOMEIP00331 dThe IPv6 Multicast Option shall use the Type 0x16 c
+TRSOMEIP00332 dThe IPv6 Multicast Option shall specify the IPv6Address the
+transport layer protocol ISOOSI layer 4 used and its Port Number c
+TRSOMEIP00333 dThe Format of the IPv6 Multicast Option shall be as follows
+Length uint16 Shall be set to 0x0015
+Type uint8 Shall be set to 0x16
+Reserved uint8 Shall be set to 0x00
+IPv6Address uint128 Shall transport the multicast IPAddress as 16 Bytes
+Reserved uint8 Shall be set to 0x00
+L4Proto uint8 Shall be set to the transport layer protocol ISOOSI layer 4
+based on the IANAIETF types 0x11 UDP
+L4Port uint16 Shall be set to the port of thetransport layer protocol ISOOSI
+layer 4
+c
+TRSOMEIP00334 dFigure 618 shows the format of the IPv6 Multicast Option c
+TRSOMEIP00335 d
+Type 0x16012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Reserved 0x00 Length 0x0015
+Covered by Length
+incl Reserved
+Reserved 0x00 L4Proto UDP Port NumberIPv6Address 128bit
+57 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Figure 618 SOMEIPSD IPv6 Multicast Option
+c
+TRSOMEIP00336 dThe server shall reference the IPv6 Multicast Option stating the
+IPv6 Multicast Address and Port Number he will send multicast events and notication
+events toc
+6735 Referencing Options from Entries
+TRSOMEIP00337 dUsing the following elds of the entries options are referenced
+by the entriesc
+TRSOMEIP00338 d
+Index First Option Run Index into array of options for rst option run Index 0
+means rst of SOMEIPSD packet
+Index Second Option Run Index into array of options for second option run Index
+0 means rst of SOMEIPSD packet
+Number of Options 1 Length of rst option run Length 0 means no option in
+option run
+Number of Options 2 Length of second option run Length 0 means no option in
+option run
+c
+TRSOMEIP00339 dTwo different option runs exist First Option Run and Second
+Option Runc
+Rationale for the support of two option runs Two different types of options are ex
+pected options common between multiple SOMEIPSD entries and options different
+for each SOMEIPSD entry Supporting to different options runs is the most efcient
+way to support these two types of options while keeping the wire format highly efcient
+TRSOMEIP00341 dEach option run shall reference the rst option and the number
+of options for this run c
+TRSOMEIP00342 dIf the number of options is set to zero the option run is con
+sidered emptyc
+TRSOMEIP00343 dFor empty runs the Index ie Index First Option Run andor
+Index Second Option Run shall be set to zero c
+TRSOMEIP00344 dImplementations shall accept and process incoming SD mes
+sages with option run length set to zero and option index not set to zero c
+58 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6736 Example
+TRSOMEIP00345 dFigure 619 shows an example SOMEIPSD PDU c
+TRSOMEIP00346 d
+Protocol Version 8 bit
+0x01 Interface Version 8 bit
+0x01 Message Type 8 bit
+0x02 Return Code 8 bit
+0x00 Request ID Client ID  Session ID 32 bitLength 32 bit
+ 64 Message ID Service ID  Method ID 32 bit
+ 0xFFFF 8100 012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Flags 8 bit  0x80 Reserved 8 bit 0x00
+Length of Entries Array in Bytes 32 bit
+0x0000 0020 
+Length of Options Array in Bytes 
+12 Type 
+0x00 FindIndex 1st options 
+0Index 2nd options 
+0 of opt 1
+0 none of opt 2
+ 0 none
+Service ID 
+0x4711 Instance ID 
+0xFFFF all
+Major Version 
+0xff anyTTL 
+3600 search is valid for 1h
+Minor Version 
+0xFFFF FFFF any
+Type 
+0x01 OfferIndex 1st options 
+0Index 2nd options 
+0 of opt 1
+1 of opt 2
+0 none 
+Service ID 
+0x1234 Instance ID 
+0x0001 
+Major Version 
+0x01 TTL 
+3 offer is valid for 3 seconds
+Minor Version 
+0x00000032 
+Type 
+0x04 IPv4 EndpointReserved 
+0x00 Length 
+0x0009 
+IPv4Address  19216801
+Reserved
+0x00L4Proto
+0x11 UDPPort Number
+0xD903 55555
+SOMEIP SOMEIP SD
+Figure 619 SOMEIPSD Example PDU
+c
+59 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+674 Service Discovery Messages
+TRSOMEIP00347 dUsing the previously specied header format different entries
+and messages consisting of one or more entries can be built The specic entries and
+there header layouts are explained in the following sections c
+TRSOMEIP00348 dFor all entries the following shall be true
+Index First Option Run Index Second Option Run Number of Options 1 and
+Number of Options 2 shall be set according to the chained options
+c
+6741 Service Entries
+TRSOMEIP00349 dEntries concerned with services shall be based on the Service
+Entry Type Format as specied in TRSOMEIP00268 c
+67411 Find Service Entry
+TRSOMEIP00350 dThe Find Service entry type shall be used for nding service
+instances and shall only be sent if the current state of a service is unknow no current
+Service Offer was received and is still being valid c
+TRSOMEIP00351 dFind Service entries shall set the entry elds in the following
+way
+Type shall be set to 0x00 FindService
+Service ID shall be set to the Service ID of the service that shall be found
+Instance ID shall set to 0xFFFF  if all service instances shall be returned It shall
+be set to the Instance ID of a specic service instance if just a single service
+instance shall be returned
+Major Version shall be set to 0xFF  that means that services with any version shall
+be returned If set to value different than 0xFF  services with this specic major
+version shall be returned only
+Minor Version shall be set to 0xFFFF FFFF  that means that services with any
+version shall be returned If set to a value diffent to 0xFFFF FFFF  services with
+this specic minor version shall be returned only
+TTL shall be set to the lifetime of the Find Service entry After this lifetime the
+Find Service entry shall be considered not existing
+If set to 0xFFFFFF  the Find Service entry shall be considered valid until the next
+reboot
+60 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TTL shall not be set to 0x000000 since this is considered to be the Stop entry for
+this entry
+c
+67412 Offer Service Entry
+TRSOMEIP00355 dThe Offer Service entry type shall be used to offer a service to
+other communication partners c
+TRSOMEIP00356 dOffer Service entries shall set the entry elds in the following
+way
+Type shall be set to 0x01 OfferService
+Service ID shall be set to the Service ID of the service instance offered
+Instance ID shall be set to the Instance ID of the service instance offered
+Major Version shall be set to the Major Version of the service instance offered
+Minor Version shall be set to the Minor Version of the service instance offered
+TTL shall be set to the lifetime of the service instance After this lifetime the
+service instance shall considered not been offered
+If set to 0xFFFFFF  the Offer Service entry shall be considered valid until the next
+reboot
+TTL shall not be set to 0x000000 since this is considered to be the Stop entry for
+this entry
+c
+TRSOMEIP00357 dOffer Service entries shall always reference at least an IPv4
+or IPv6 Endpoint Option to signal how the service is reachable c
+TRSOMEIP00358 dFor each L4 protocol needed for the service ie UDP andor
+TCP an IPv4 Endpoint option shall be added if IPv4 is supported c
+TRSOMEIP00359 dFor each L4 protocol needed for the service ie UDP andor
+TCP an IPv6 Endpoint option shall be added if IPv6 is supported c
+TRSOMEIP00360 dThe IP addresses and port numbers of the Endpoint Options
+shall also be used for transporting events and notication events c
+TRSOMEIP00361 dIn the case of UDP this information is used for the source
+address and the source port of the events and notication events c
+TRSOMEIP00362 dIn the case of TCP this is the IP address and port the client
+needs to open a TCP connection to in order to receive events using TCP  c
+61 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+67413 Stop Offer Service Entry
+TRSOMEIP00363 dThe Stop Offer Service entry type shall be used to stop offering
+service instances c
+TRSOMEIP00364 dStop Offer Service entries shall set the entry elds exactly like
+the Offer Service entry they are stopping except
+TTL shall be set to 0x000000
+c
+6742 Eventgroup Entry
+TRSOMEIP00374 dEntries concerned with services follow the Eventgroup Entry
+Type Format as specied in TRSOMEIP00270 c
+67421 Subscribe Eventgroup Entry
+TRSOMEIP00385 dThe Subscribe Eventgroup entry type shall be used to sub
+scribe to an eventgroup This can be considered comparable to the Request Service
+entry typec
+TRSOMEIP00386 dSubscribe Eventgroup entries shall set the entry elds in the
+following way
+Type shall be set to 0x06 SubscribeEventgroup
+Service ID shall be set to the Service ID of the service instance that includes the
+eventgroup subscribed to
+Instance ID shall be set to the Instance ID of the service instance that includes
+the eventgroup subscribed to
+Major Version shall be set to the Major Version of the service instance of the
+eventgroup subscribed to
+Eventgroup ID shall be set to the Eventgroup ID of the eventgroup subscribed to
+Major Version shall be set to the Major Version of the service instance that in
+cludes the eventgroup subscribed to
+TTL shall be set to the lifetime of the eventgroup After this lifetime the eventgroup
+shall considered not been subscribed to
+If set to 0xFFFFFF  the Subscribe Eventgroup entry shall be considered valid until
+the next reboot
+TTL shall not be set to 0x000000 since this is considered to be the Stop entry for
+this entry
+62 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+c
+TRSOMEIP00387 dSubscribe Eventgroup entries shall reference one or two IPv4
+andor one or two IPv6 Endpoint Options one for UDP  one for TCP c
+67422 Stop Subscribe Eventgroup Entry
+TRSOMEIP00388 dThe Stop Subscribe Eventgroup entry type shall be used to
+stop subscribing to eventgroups c
+TRSOMEIP00389 dStop Subscribe Eventgroup entries shall set the entry elds
+exactly like the Subscribe Eventgroup entry they are stopping except
+TTL shall be set to 0x000000
+c
+67423 Subscribe Eventgroup Acknowledgement Subscribe Eventgroup
+Ack Entry
+TRSOMEIP00390 dThe Request Eventgroup Acknowledgment entry type shall be
+used to indicate that Suibscribe Eventgroup entry was accepted c
+TRSOMEIP00391 dSubscribe Eventgroup Acknowledgment entries shall set the
+entry elds in the following way
+Type shall be set to 0x07 SubscribeEventgroupAck
+Service ID Instance ID Major Version Eventgroup ID TTL and Reserved shall
+be the same value as in the Subcribe that is being answered
+c
+TRSOMEIP00392 dSubscribe Eventgroup Ack entries referencing events and no
+tication events that are transported via multicast shall reference an IPv4 Multicast Op
+tion andor and IPv6 Multicast Option The Multicast Options state to which Multicast
+address and port the events and notication events will be sent to c
+67424 Subscribe Eventgroup Negative Acknowledgement Subscribe Event
+group Nack Entry
+TRSOMEIP00393 dThe Subscribe Eventgroup Negative Acknowledgment entry
+type shall be used to indicate that Subscribe Eventgroup entry was NOT accepted c
+TRSOMEIP00394 dSubscribe Eventgroup Negative Acknowledgment entries shall
+set the entry elds in the following way
+Type shall be set to 0x07 SubscribeEventgroupAck
+63 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Service ID Instance ID Major Version Eventgroup ID shall and Reserved be the
+same value as in the subscribe that is being answered
+The TTL shall be set to 0x000000
+c
+TRSOMEIP00527 dWhen the client receives a SubscribeEventgroupNack as an
+swer on a SubscribeEventgroup for which a TCP connection is required the client shall
+check the TCP connection and shall restart the TCP connection if needed c
+Rational The server might have lost the TCP connection and the client has not
+Checking the TCP connection might include the following
+Checking whether data is received for eg other Eventgroups
+Sending out a Magic Cookie message and waiting for the TCP ACK
+Reestablishing the TCP connection
+675 Service Discovery Communication Behavior
+6751 Startup Behavior
+TRSOMEIP00395 dFor each Service Instance or Eventgroup the Service Discov
+ery shall have at least these three phases in regard to sending entries
+Initial Wait Phase
+Repetition Phase
+Main Phase
+c
+TRSOMEIP00396 dAn actual implemented state machine will need more than just
+states for these three phases Eg local services can be still down remote services
+can be already found no nds needed anymore c
+TRSOMEIP00397 dAs soon as the system has started and the link on a interface
+needed for a Service Instance is up server or requested client the service discovery
+enters the Initial Wait Phase for this service instance c
+TRSOMEIP00398 dSystems has started means here the needed applications and
+possible external sensors and actuators as well Basically the functionality needed by
+this service instance has to be ready to offer a service and nding a service makes
+only sense after some application already needs it c
+TRSOMEIP00399 dThe Service Discovery implementation shall wait based on
+the INITIALDELAY after entering the Initial Wait Phase and before sending the rst
+messages for the Service Instance c
+64 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00400 dINITIALDELAY shall be dened as a minimum and a maxi
+mum delayc
+TRSOMEIP00401 dThe wait time shall be determined by choosing a random value
+between the minimum and maximum of INITIALDELAY  c
+TRSOMEIP00402 dThe Service Discovery shall use the same random value for
+multiple entries of different types in order to pack them toghether for a reduced number
+of messagesc
+TRSOMEIP00403 dThe Service Discovery shall also pack entries together when
+no random delay is involved For example shall all SubscribeEventgroup entries of a
+message be answered together in one message c
+TRSOMEIP00404 dAfter sending the rst message the Repetition Phase of this
+Service Instancethese Service Instances is entered c
+TRSOMEIP00405 dThe Service Discovery implementation shall wait in the Repe
+titions Phase based on REPETITIONSBASEDELAY  c
+TRSOMEIP00406 dAfter each messages sent in the Repetition Phase the delay
+is doubledc
+TRSOMEIP00407 dThe Service Discovery shall send out only up to REPETI
+TIONSMAX entries during the Repetition Phase c
+TRSOMEIP00408 dSending Find entries shall be stopped after receiving the cor
+responding Offer entries by jumping to the Main Phase in which no Find entries are
+sentc
+TRSOMEIP00409 dIf REPETITIONSMAX is set to 0 the Repetition Phase shall
+be skipped and the Main Phase is entered for the Service Instance after the Initial Wait
+Phasec
+TRSOMEIP00410 dAfter the Repetition Phase the Main Phase is being entered
+for a Service Instance c
+TRSOMEIP00411 dAfter entering the Main Phase 1CYCLICOFFERDELAY is
+waited before sending the rst message c
+TRSOMEIP00412 dIn the Main Phase Offer Messages and Publish Messages
+shall be sent cyclically if a CYCLICOFFERDELAY is congured c
+TRSOMEIP00413 dAfter a message for a specic Service Instance the Service
+Discovery waits for 1CYCLICOFFERDELAY before sending the next message for
+this Service Instance c
+TRSOMEIP00414 dFor RequestsSubscriptions the same cyclic behavior
+in Main Phase as for the Offers shall be implemented with the parameter
+CYCLICREQUESTDELAY instead of CYCLICOFFERDELAY  c
+TRSOMEIP00415 dFor Find entries Find Service and Find Eventgroup no cyclic
+messages are allowed in Main Phase c
+65 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00416 dExample
+Initial Wait Phase
+Wait for randomdelay in RangeINITIALDELAYMIN MAX
+Send message
+Repetition Phase REPETITIONSBASEDELAY100ms REPETITIONSMAX2
+Wait 20100ms
+Send message
+Wait 21100ms
+Send message
+Wait 22100ms
+Main Phase as long message is active and CYCLICOFFERDELAY is dened
+Send message
+Wait CYCLICOFFERDELAY
+c
+6752 Server Answer Behavior
+TRSOMEIP00417 dThe Service Discovery shall delay answers to entries that were
+transported in a multicastbroadcast SOMEIPSD message using the conguration
+item REQUESTRESPONSEDELAY 
+This applies to FindService entries
+c
+TRSOMEIP00418 dThe REQUESTREPONSEDELAY shall also apply to unicast
+messages triggered by multicast meessages eg Subscribe Eventgroup after Offer
+Servicec
+TRSOMEIP00419 dThe REQUESTRESPONSEDELAY shall not apply if unicast
+messages are answered with unicast messages c
+TRSOMEIP00420 dREQUESTRESPONSEDELAY shall be specied by a mini
+mum and a maximum c
+TRSOMEIP00421 dThe actual delay shall be randomly chosen between minimum
+and maximum of REQUESTRESPONSEDELAY  c
+TRSOMEIP00422 dFor basic implementations all Find Service entries no matter
+of the state of the Unicast Flag shall be answered with Offer Service entries trans
+ported using unicast c
+66 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00423 dAs optimization the following behavior shall be activatable c
+TRSOMEIP00424 dFind messages received with the Unicast Flag set to 1 shall
+be answered with a unicast response if the last offer was sent when the last message
+was sent less than 12 CYCLICOFFERDELAY for requestssubscribes this is 12
+CYCLICREQUESTDELAY ago c
+TRSOMEIP00425 dFind messages received with the Unicast Flag set to
+1 shall be answered with a multicast reponse if the last offer was sent
+12 CYCLICOFFERDELAY or longer ago for requestssubscribes this is 12
+CYCLICREQUESTDELAY or longer c
+TRSOMEIP00426 dFind messages received with Unicast Flag set to 0 multicast
+shall answered with a multicast response c
+6753 Shutdown Behavior
+TRSOMEIP00427 dWhen a server service instance of an ECU is being stopped
+a Stop Offer Service entry shall be sent out c
+TRSOMEIP00428 dWhen a server sends out a Stop Offer Service entry all sub
+scriptions for this service instance shall be deleted on the server side c
+TRSOMEIP00429 dWhen a server sends out a Stop Offer Service entry all sub
+scriptions for this service instance shall be deleted on the client side c
+TRSOMEIP00430 dWhen a client receives a Stop Offer Service entry the client
+shall not sent out nds but wait for offers or change of status application network
+management ethernet link or similar c
+TRSOMEIP00431 dWhen a client service instance of an ECU is being stopped
+ie the service instance is released the SD shall sent out Stop Subscribe Eventgroup
+entries for all subscribed Eventgroups c
+TRSOMEIP00432 dWhen the whole ECUs is being shut down Stop Offer Service
+entries shall be sent out for all service entries and Stop Subscribe Eventgroup entries
+for Eventgroups c
+6754 State Machines
+TRSOMEIP00433 dIn this section the state machines of the client and server are
+shownc
+TRSOMEIP00434 d
+67 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+ stm SD Serv er State Machine Serv ices 
+SD Serv er State Machine Serv ices 
+Initial 
+Not Ready 
+Ready 
+Initial Wait Phase 
+Repetition Phase 
+Main Phase Initial Initial Timer set 
+Initial Timer set 
+Initial Timer set Timer expired runREPETITIONSMAX 
+sendOfferService 
+run 
+setTimer2runREPETITIONSBASEDELAY ifstatusupandconfigured 
+and servicestatusup 
+ifstatuschanged or servicestatuschanged 
+ifstatusupandconfigured and 
+servicestatusup 
+SetTimerInRangeINITIALDELAYMIN 
+INITIALDELAYMAX 
+Timer expired 
+sendOfferService ifstatusupandconfigured 
+or servicestatusdown 
+REPETITIONSMAX0 
+run0 
+setTimer2runREPETITIONSBASEDELAY servicestatusdown 
+clearAllTimers 
+sendStopOfferService 
+Timer expired 
+runREPETITIONSMAX 
+receiveFindService 
+waitAndSendOfferService 
+resetTimer setTimerCYCLICANNOUNCEDELAY 
+sendOfferService 
+Timer expired 
+setTimerCYCLICANNOUNCEDELAY 
+sendOfferService ifstatuschanged ifstatusupandconfigured 
+clearAllTimers 
+receiveFindService 
+waitAndSendOfferService 
+ResetTimer 
+REPETITIONSMAX0 
+Figure 620 SOMEIP Service State Machine Server
+c
+TRSOMEIP00435 d
+68 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+ stm SD Client State Machine Services 
+SD Client State Machine Services 
+Searching for Service 
+Initial Wait Phase Initial Not Requested 
+Service Not Seen Service Seen 
+RequestedbutnotReady 
+Service Ready 
+Initial 
+Timer Set 
+Repetition Phase 
+Initial Timer Set Initial 
+Initial Stopped 
+ifstatuschanged 
+ifstatusupandconfigured receiveStopServiceOffer Timer expired TTL 
+ServiceNotRequested InternalServiceRequest 
+ifstatusupandconfigured 
+ServiceRequested and 
+ifstatusupandconfigured 
+ServiceRequested and 
+ifstatusupandconfigured ifstatuschanged ifstatusupandconfigured 
+InternalServiceRequest 
+ifstatusupandconfigured receiveOfferService 
+setTimerTTL 
+receiveServiceOffer 
+resetTimerTTL 
+receiveOfferService 
+setTimerTTL 
+setTimerInRangeINITIALDELAYMIN 
+INITIALDELAYMAX 
+Timer Expired 
+sendFindService 
+REPETITIONSMAX0 
+run0 
+setTimer2runREPETITIONSBASEDELAY 
+runREPETITIONSMAX 
+sendFindService 
+run 
+setTimer2runREPETITIONSBASEDELAY ifstatuschanged 
+ifstatusupandconfigured 
+cancelTimerTTL Timer expired TTL receiveStopOfferService 
+cancelTimerTTL 
+receiveOfferService 
+resetTimerTTL 
+receiveOfferService 
+resetTimerTTL 
+Figure 621 SOMEIP Service State Machine Client
+c
+676 Announcing nonSOMEIP protocols with SOMEIPSD
+TRSOMEIP00436 dBesides SOMEIP other communication protocols are used
+within the vehicle eg for Network Management Diagnosis or Flash Updates Such
+communications protocols might need to communicate a service instance or have
+eventgroups as well c
+69 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00437 dFor NonSOMEIP protocols a special ServiceID shall be used
+and further informationen shall be added using the conguration option
+ServiceID shall be set to 0xFFFE reserved
+InstanceID shall be used as described for SOMEIP services and eventgroups
+The Conguration Option shall be added and shall contain at least a entry with
+key otherserv and a congurable nonempty value that is determined by the
+system department
+c
+TRSOMEIP00438 dSOMEIP services shall not use the otherservstring in the
+Conguration Option c
+TRSOMEIP00439 dFor Find ServiceOffer ServiceRequest Service entries the
+otherservString shall be used when announcing nonSOMEIP service instances c
+TRSOMEIP00440 dExample for valid otherservstring otherservinternaldiag
+Example for a unvalid otherservstring otherserv
+Example for a unvalid otherservstring otherserv c
+TRSOMEIP00441 d
+70 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Protocol Version 8 bit
+0x01 Interface Version 8 bit
+0x01 Message Type 8 bit
+0x02 Return Code 8 bit
+0x00 Request ID Client ID  Session ID 32 bitLength 32 bit
+ 0x0000 005 C  92 Message ID Service ID  Method ID 32 bit
+ 0xFFFF 8100 012345678910 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 bit offset 
+Flags 8 bit  0x80 Reserved 8 bit 0x00
+Length of Entries Array in Bytes 32 bit
+0x0000 0020 32
+Length of Options Array in Bytes 
+ 0x0000 0028 40Type 
+0x00 FindIndex 1st options 
+0Index 2nd options 
+0 of opt 1
+0 none of opt 2
+ 0 none
+Service ID 
+0x1001 Instance ID 
+0xFFFF all
+Major Version 
+0xff anyTTL 
+3600 search is valid for 1h
+Minor Version 
+0xFFFF FFFF any
+Type 
+0x01 OfferIndex 1st options 
+0Index 2nd options 
+0 of opt 1
+2 of opt 2
+0 none 
+Service ID 
+0xFFFE Instance ID 
+0x0001 
+Major Version 
+0x01 TTL 
+3 offer is valid for 3 seconds
+Minor Version 
+0x00000032 
+Type 
+0x04 IPv4 EndpointReserved 
+0x00 Length 
+0x0009 
+IPv4Address  19216801
+Reserved 
+0x00 L4Proto 
+0x06 TCP
+SOMEIP SOMEIP SD
+0x16otherservinternaldiag 0Type 
+0x01 ConfigReserved 
+0x00 Length 
+0x0025 Port Number 
+0x1A91 Port 6801 
+Figure 622 SOMEIPSD Example PDU for NonSOMEIPSD
+c
+71 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+677 PublishSubscribe with SOMEIP and SOMEIPSD
+TRSOMEIP00442 dIn contrast to the SOMEIP requestresponse mechanism
+there may be cases where a client requires a set of parameters from a server but
+does not want to request that information each time it is required These are called
+notications and concern events and elds c
+TRSOMEIP00443 dClients may register using the SOMEIPSD at runtime with a
+server in order to receive notications c
+TRSOMEIP00444 d
+Client Server 
+SOMEIPSD SubscribeEventgroup  
+SOMEIP Event 
+SOMEIP Event 
+SOMEIP Event 
+SOMEIP EventSOMEIPSD SubscribeEventgroupAck  
+Figure 623 Notication interaction
+c
+TRSOMEIP00445 dThis feature is comparable but NOT identical to the MOST
+notication mechanism c
+TRSOMEIP00446 dWith the SOMEIPSD entry Offer Service the server offers to
+push notications to clients thus it may substitute the Publish Eventgroup as trigger
+for Subscriptions c
+TRSOMEIP00447 dWhen a server of a notication service starts up eg after
+reset it shall send a SOMEIPSD Offer Service into the network to discover all in
+stances interested in the events and elds offered c
+TRSOMEIP00448 dEach client in SD based notication implements the specic
+serviceinterfaces for the notication they wish to receive and signal their wish of re
+ceiving such notications using the SOMEIPSD Subscribe Eventgroup entries c
+TRSOMEIP00449 dEach client shall respond to a SOMEIPSD Offer Service entry
+from the server with a SOMEIPSD Subscribe Eventgroup entry as long as the client
+is still interested in receiving the noticationsevents of this eventgroup
+72 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+If the client is able to reliable detect the reboot of the server using the SOMEIPSD
+messages reboot ag the client may choose to only answer Offer Service messages
+after the server reboots The client make sure that this works reliable even when the
+SOMEIPSD messages of the server are lost c
+TRSOMEIP00450 d
+ sd SEQLinkLossClient 
+Server Client 
+No registrations 
+Client Reboot 
+Detected OfferService 
+SubscribeEventgroup 
+updateRegistration 
+SubscribeEventgroupAck  Events 
+linkDown 
+deleteEntries 
+linkUp 
+OfferService 
+SubscribeEventgroup Session ID1 Reboot1 
+updateRegistration 
+SubscribeEventgroupAck  Events 
+Figure 624 PublishSubscribe with link loss at client gure ignoring timings
+c
+TRSOMEIP00451 dThe server sending Publish Eventgroup entries or Offer Ser
+vice entries as implicit Publishes has to keep state of Subscribe Eventgroup messages
+for this eventgroup instance in order to know if noticationsevents have to be sent c
+TRSOMEIP00452 dA client can deregister from a server by sending a SOMEIP
+SD Subscribe Eventgroup message with TTL0 Stop Offer Service c
+TRSOMEIP00453 d
+73 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+ sd SEQRegistrationDeregistration 
+Server Client 2 Client 1 
+OfferService OfferService 
+SubscribeEventgroup 
+updateRegistration 
+SubscribeEventgroupAck  Events 
+Event 
+SubscribeEventgroup 
+updateRegistration 
+SubscribeEventgroupAck  Events 
+Event Event 
+Event Event 
+StopSubscribeEventgroup 
+updateRegistration 
+Event 
+Figure 625 PublishSubscribe RegistrationDeregistration behavior gure ignoring
+timings
+c
+TRSOMEIP00454 dThe SOMEIPSD on the server shall delete the subscription
+if a relevant SOMEIP error is received after sending the pushmessage c
+TRSOMEIP00455 dIf the server loses its link on the Ethernet link it SHALL delete
+all the registered notications and close the TCP connection for those notications as
+wellc
+TRSOMEIP00456 dIf the Ethernet link of the server comes up again it shall trigger
+a SOMEIPSD Offer Service message
+c
+TRSOMEIP00457 d
+74 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+ sd SEQLinkLossServ er 
+Client Server 
+No registration 
+Reboot 
+detected OfferService 
+SubscribeEventgroup 
+updateRegistration 
+SubscribeEventgroupAck  Events 
+linkDown 
+deleteRegistrations 
+linkUp 
+OfferService Session ID1 Reboot1 
+SubscribeEventgroup 
+updateRegistration 
+SubscribeEventgroupAck  Events 
+Figure 626 PublishSubscribe with link loss at server gure ignoring timings
+c
+TRSOMEIP00458 dAfter having not received an noticationevent of an event
+group subscribed to for a certain timeout the ECU shall send a new Subscribe Event
+group entry The timeout shall be congurable for each eventgroup c
+TRSOMEIP00459 dThis timeout feature might be based on cyclic messages or
+message protected by Alive Counters functional safety c
+TRSOMEIP00460 dA linkup event on the clients Ethernet link shall start the Initial
+Wait Phase consider UDPNM and others SOMEIPSD Subscribe Eventgroup entry
+shall be sent out as described above c
+TRSOMEIP00461 dThe client shall open an TCP connection to the server before
+sending the Subscribe Eventgroup entry if reliable events and notication events exists
+in the IDLc
+75 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00462 dAfter a client has sent a Subscribe Eventgroup entry the server
+shall send a Subscribe Eventgroup Ack entry considering the specied delay behavior
+c
+TRSOMEIP00463 dThe client shall wait for the Subscribe Eventgroup Ack ac
+knowledging an Subscribe Eventgroup entry If this Subscribe Eventgroup Ack does
+not arrive before the next Subscribe Eventgroup is sent the client shall sent a Stop
+Stubscribe Eventgroup and an Subscribe Eventgroup in the SOMEIPSD message
+the Subscribe Eventgroup would have been sent with c
+TRSOMEIP00464 dIf the initial value is of concern  ie for elds  the server
+shall immediately send the rst noticationevent ie event The client shall repeat the
+Subscribe Eventgroup entry if he did not receive the noticationevent in a congurable
+timeoutc
+TRSOMEIP00465 dThis means
+It is not allowed to send initial values of events upon subscriptions pure event
+and not eld
+The event messages of eld notiers must be sent on subscriptions eld and not
+pure event
+c
+TRSOMEIP00466 d
+stm Service Discovery Eventgroup PubSub Unicast 
+EventgroupPubSub Unicast Eventgroup 
+Initial 
+Service Down 
+Serv ice Up 
+Subscribed Not Subscribed Initial OfferService is implicit 
+PublishEventgroup 
+AUTOSAR 
+ enableEvents  enableTxRoutingGroup 
+ disableEvents  disableTxRoutingGroupServiceDown ServiceUp 
+receiveSubscribeEventgroup 
+enableEvents 
+sendSubscribeEventgroupAck 
+receiveStopSubscribeEventgroup 
+disableEvents 
+TTLexpired SubscriptionCounter1 
+disableEvents receiveSubscribeEventgroup 
+sendSubscribeEventgroupAck ServiceUp ServiceDown 
+76 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Figure 627 PublishSubscribe State Diagram server behavior for unicast eventgroups
+c
+TRSOMEIP00467 d
+stm Service Discovery Eventgroup PubSub Multicast  
+Ev entgroupPubSub Multicast Ev entgroup 
+Initial 
+Service Down 
+Service Up 
+Subscribed Not Subscribed Initial OfferService is implicit 
+PublishEventgroup 
+AUTOSAR 
+ enableEvents  enableTxRoutingGroup 
+ disableEvents  disableTxRoutingGroupServiceDown 
+ServiceUp ServiceUp 
+receiveStopSubscribeEventgroup SubscriptionCount er1 
+SubscriptionCounter 
+TTLexpired SubscriptionCounter1 
+SubscriptionCounter receiveSubscribeEventgroup 
+SubscriptionCounter 
+sendSubscribeEventgroupAck 
+receiveStopSubscribeEventgroup SubscriptionCount er1 
+SubscriptionCounter 
+disableEvents 
+TTLexpired SubscriptionCounter1 
+SubscriptionCounter 
+disableEvents receiveSubscribeEventgroup 
+enableEvents 
+SubscriptionCounter 
+sendSubscribeEventgroupAck ServiceDown 
+Figure 628 PublishSubscribe State Diagram server behavior for multicast event
+groups
+c
+TRSOMEIP00468 d
+77 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+ stm Serv ice Discov ery Ev entgroup PubSub Unicast to Multicast 
+Ev entgroupPubSub UnicasttoMulticast Ev entgroup
+Initial Serv ice Down 
+Subscribed 
+Unicast 
+Not Subscribed Initial 
+AUTOSAR 
+ enableEvents  enableTxRoutingGroup 
+ disableEvents  disableTxRoutingGroup Subscribed Multicast 
+Receiving SubscribeEventgroup triggers sendInitialE vents ServiceUp 
+receiveSubscribeEventgroup 
+UnicastLimitSubscriptionCounter 
+SubscriptionCounter 
+sendSubscribeEventgroupAck 
+TTLexpired 
+SubscriptionCounter1 
+SubscriptionCounter receiveStopSubscribeEventgroup 
+SubscriptionCounter1 
+SubscriptionCounter TTLexpired 
+SubscriptionCounter1 
+SubscriptionCounter 
+disableEvents receiveStopSubscribeEventgroup 
+SubscriptionCounter1 
+SubscriptionCounter 
+disableEvents receiveSubscribeEventgroup 
+UnicastLimit0 
+enableEvents 
+SubscriptionCounter 
+sendSubscribeEventgroupAck ServiceDown 
+ServiceDown 
+TTLexpired 
+SubscriptionCounterUnicastLimit1 
+SubscriptionCounter receiveSubscribeEventgroup 
+UnicastLimit0 
+enableMulticastEvents 
+SubscriptionCounter 
+sendSubscribeEventgroupAck 
+TTLexpired 
+SubscriptionCounterUnicastLimit1 
+switchToUnicastEvents 
+SubscriptionCounter receiveSubscribeEventgroup 
+SubscriptionCounterUnicastLimit 
+SubscriptionCounter 
+sendSubscribeEventgroupAck 
+switchToMulticastEvents TTLexpired 
+SubscriptionCounter1  
+UnicastLimit0 
+SubscriptionCounter 
+disableMulticastEvents 
+receiveSubscribeEventgroup 
+SubscriptionCounter 
+receiveStopSubscribeEventgroup 
+SubscriptionCounterUnicastLimit1 
+SubscriptionCounter ServiceUp 
+receiveStopSubscribeEventgroup 
+SubscriptionCounter1  
+UnicastLimit0 
+SubscriptionCounter 
+disableMulticastEvents 
+receiveStopSubscribeEventgroup 
+SubscriptionCounterUnicastLimit1 
+switchToUnicastEvents 
+SubscriptionCounter 
+Figure 629 PublishSubscribe State Diagram server behavior for adaptive unicastmul
+ticast eventgroups
+c
+TRSOMEIP00469 d
+78 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+stm STAT ESDNotification 
+NotificationServ er 
+Start 
+Ready  No 
+registration 
+NotificationClient 
+Start 
+Ready Waiting for Notifications Registration Sent Notification Registered 
+Waiting for ACK 
+Link is down Not registered  Registration stale Link is 
+down 
+Option A with ACK 
+Option B without ACK Option A 
+Option B 
+Option B Option A 
+noNotifyReceivedTimeout 
+much greater than
+ACKNotReceivedTimeout
+eg 25 timesSimplification 
+Not covered 
+Initial Wait Phase 
+Repetition Phase 
+Main Phase 
+Simplification 
+Not covered 
+Initial Wait Phase 
+Repetition Phase 
+Main Phase receiveSubscribeEventgroup 
+sendNotify 
+ifLinkUp receiveRPCNotify 
+s endRPCMethodNotImplemented 
+receiveNotify 
+sendACK ifLink Down 
+ACKNotReceivedTimeout 
+s endPublishEventgroup 
+missedAckCtr ifLinkDown 
+deleteRegistration 
+appTrigger 
+sendStopSubscribeEventgroup appTrigger 
+sendSubscribeEventgroup onUpdateTimeout 
+sendNotify 
+resetTimer 
+ifLinkDown 
+receiveNotify 
+receiveNotifyifLinkUp 
+sendPublishEventgroup 
+receivePublishEventgroup receiveACK 
+missedAckCtr0 
+onUpdateTimeout 
+sendNotify 
+resetTimer ifLinkDown ifLinkDown 
+queryTimerEvent 
+s endQuery 
+resetQueryTimer ACKNotReceivedTimeout 
+missedAckCtrThreshold 
+s endPublishEventgroup 
+deleteRegistration 
+onChange 
+sendNotify onChange s endNotify 
+ifLinkDown receiveMethodNotImplemented 
+sendPublishEventgroup deleteRegis tration 
+receiveNotify
+sendACKifLinkUp receiveStopSubscribeEventgroup 
+deleteRegistration ifLinkUp 
+noNotifyReceivedTimeout receiveSubscribeEventgroup 
+s endNotify 
+ifLinkDown 
+noNotifyReceivedTimeout
+sendSubscribeEventgroup
+Figure 630 PublishSubscribe State Diagram overall behavior
+c
+TRSOMEIP00470 dThe registration of a client to receive notications from a server
+may be implicit Meaning the mechanism is precongured c
+79 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00471 dTo allow for cleanup of stale client registrations to avoid that
+the list of listeners lls over time a cleanup mechanism is required c
+TRSOMEIP00472 dThe following entries shall be tranported by unicast only
+Subscribe Eventgroup
+Stop Subscribe Eventgroup
+Subscribe Eventgroup Ack
+Subscribe Eventgroup Nack
+c
+TRSOMEIP00473 dWhen sending an Subscribe Eventgroup entry as reaction of
+receiving a Publish Eventgroup entry or an Offer Service entry the timer controlling
+cyclic Subscribe Eventgroups entries shall be reset c
+TRSOMEIP00474 dIf no cyclic Subscribe Eventgroups are congured the timer
+for cyclic Subscribe Eventgroups stays turned off c
+678 Endpoint Handling for Services and Events
+TRSOMEIP00475 dThis section describes how the Endpoints encoded in the End
+point and Multicast Options shall be set and used c
+TRSOMEIP00476 dThe Service Discovery shall overwrite IP Addresses and Port
+Numbers with those transported in Endpoint and Multicast Options if the statically con
+gured values are different from those in these options c
+6781 Service Endpoints
+TRSOMEIP00477 dOffer Service entries shall reference up to 1 UDP Endpoint
+Option and up to 1 TCP Endpoint Option Both shall be of the same version Internet
+Protocol IPv4 or IPv6 c
+TRSOMEIP00478 dThe referenced Endpoint Options of the Offer Service entries
+denote the IP Address and Port Numbers the service instance can be reached at the
+serverc
+TRSOMEIP00479 dThe referenced Endpoint Options of the Offer Service entries
+also denote the IP Address and Port Numbers the service instance sends the events
+fromc
+TRSOMEIP00480 dEvents of this service instance shall not be sent from any other
+Endpoints than those given in the Endpoint Options of the Offer Service entries c
+80 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00481 dIf an ECU offers multiple service instances SOMEIP mes
+sages of these service instances shall be differentiated by the information transported
+in the Endpoint Options referenced by the Offer Service entries c
+TRSOMEIP00482 dTherefore transporting an Instance ID in the SOMEIP header
+is not requiredc
+TRSOMEIP00528 dA sender shall not reference Endpoint Options nor Multicast
+Options in a Find Service Entry c
+TRSOMEIP00529 dA receiver shall ignore Endpoint Options and Multicast Options
+in a Find Service Entry c
+TRSOMEIP00530 dOther Options non Endpoint or Multicast Options shall still be
+allowed to be used in a Find Service Enty c
+6782 Eventgroup Endpoints
+TRSOMEIP00483 dSubscribe Eventgroup entries shall reference up to 1 UDP
+Endpoint Option and up to 1 TCP Endpoint Option for the Internet Protocol used IPv4
+or IPv6c
+TRSOMEIP00484 dThe Endpoint Options referenced in the Subscribe Eventgroup
+entries is used to send unicast UDP or TCP SOMEIP events for this Service Instance
+toc
+TRSOMEIP00485 dThus the Endpoint Options referenced in the Subscribe Event
+group entries are the IP Address and the Port Numbers on the client side c
+TRSOMEIP00486 dTCP events are transported using the TCP connection the
+client has opened to the server before sending the Subscribe Eventgroup entry See
+Chapter 67342 c
+TRSOMEIP00487 dThe initial events shall be transported using unicast from
+Server to Client c
+TRSOMEIP00488 dSubscribe Eventgroup Ack entries shall reference up to 1 Mul
+ticast Option for the Internet Protocol used IPv4 or IPv6 c
+TRSOMEIP00489 dThe Multicast Option shall be set to UDP as transport protocol
+c
+TRSOMEIP00490 dThe client shall open the Endpoint specied in the Multicast
+Option referenced by the Subscribe Eventgroup Ack entry as fast as possible to not
+miss multicast events c
+TRSOMEIP00491 dIf the server has to send multicast events very shortly  5 ms
+after sending the Subscribe Eventgroup Ack entry the server shall try to delay these
+events so that the client is not missing it If this event was sent as initial event anyhow
+the server may sent this event using unicast as well c
+81 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+6783 Example
+TRSOMEIP00492 dFigure 631 shows an example with the different Endpoint and
+a Multicast Option
+The Server offers the Service Instance on UDPEndpoint SU and TCPEndpoint
+ST
+The Client opens a TCP connection
+The Client sends a Subscribe Eventgroup entry with UDPEndpoint CU unicast
+and a TCPEndpoint CT
+The Server answers with a Subscribe Eventgroup Ack entry with Multicast MU
+Then the following operations happen
+The Clients calls FunctionA on the Server
+Request is sent from CU to SU and Response from SU to CU
+For TCP this would be Request dyn to ST and Reponse from ST to CT
+The Server sends an Unicast UDP Event SU to CU
+The Server sends an Unicast TCP Event ST to CT
+The Server sends an Multicast UDP Event SU to MU
+Keep in mind that Multicast Endpoints use a Multicast IP Address on the receiver side
+ie the client and TCP cannot be used for Multicast communication
+c
+TRSOMEIP00493 d
+82 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+ sd SEQEndpoints 
+Server Client 
+No Registrations 
+Registration Open TCP connection 
+before SubscribeEventgroup 
+if reliable events exist 
+The dynamic client port is 
+called CT 
+Function call 
+UDP Event unicast 
+TCP Event 
+UDP Event multicast Initial Events UDP Unicast 
+Initial Events TCP OfferServiceEndpoint UDP SU Endpoint TCP ST 3 049030490 
+TCPSYN CTST 
+TCPSYNACK STCT 
+TCPACK CTST 
+SubscribeEventgroupEndpoint UDP CU Endpoint TCP  CT 3049030490 
+SubscribeEventgroupAckMulticast UDP MU 30490 30490 
+InitialEvents SUCU 
+InitialEvents STCT 
+FunctionA CUSU 
+FunctionA returns SUCU 
+Event SUCU 
+Event STCT 
+Event SUMU 
+Figure 631 PublishSubscribe Example for Endpoint Options and the usage of ports
+c
+679 Mandatory Feature Set and Basic Behavior
+TRSOMEIP00494 dIn this section the mandatory feature set of the Service Dis
+covery and the relevant conguration contraints are discussed This allow for bare
+minimum implementations without optional or informational features that might not be
+required for current use cases c
+TRSOMEIP00495 dThe following information can be also seen as check lists for
+compliance If a feature is not implement the implementation is consider not to comply
+to SOMEIPSDs basic feature set c
+TRSOMEIP00496 dThe following entry types shall be implemented
+Find Service
+Offer Service
+Stop Offer Service
+83 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+Subscribe Eventgroup
+Stop Subscribe Eventgroup
+Subscribe Eventgroup Ack
+Subscribe Eventgroup Nack
+c
+TRSOMEIP00497 dThe following option types shall be implemented when IPv4
+is required
+IPv4 Endpoint Option
+IPv4 Multicast Option
+Conguration Option
+c
+TRSOMEIP00498 dThe following option types shall be implemeted if IPv6 is re
+quired
+IPv6 Endpoint Option
+IPv6 Multicast Option
+Conguration Option
+c
+TRSOMEIP00499 dThe following option types shall be implemented if non
+SOMEIP services or additional conguration parameters are required
+Conguration Option
+c
+TRSOMEIP00500 dThe following behaviorsreactions shall be implemented on the
+Server side
+The Server shall be able to offer services including the Initial Wait Phase the
+Repetition Phase and the Main Phase depending on the conguration
+The Server shall offer services using Multicast Repetition Phase and Main
+Phase
+The Server does not need to answer a Find Service in the Repetition Phase
+The Server shall answer a Find Service in the Main Phase with an Offer Service
+using Unicast no optimization based on unicast ag
+The Server shall sent a Stop Offer Service when shutting down
+The Server shall be able to receive a Subscribe Eventgroup as well as a Stop
+Subscribe Eventgroup and react according to this specication
+84 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+The Server shall sent a Subscribe Eventgroup Ack and Subscribe Eventgroup
+Nack using unicast
+The Server shall support controlling the fan out of SOMEIP event messages
+based on the subscriptions of SOMEIPSD This might include sending events
+based on Multicast
+The Server shall support the triggering of initial SOMEIP event messages
+c
+TRSOMEIP00501 dThe following behaviorsreactions shall be implemented on the
+Client side
+The Client shall nd services using a Find Service entry and Multicast
+The Client shall stop nding a service if the regular Offer Service arrives
+The Client shall react to the Servers Offer Service with an unicast SD message
+including all Subscribe Eventgroups of the services offered in the message of the
+Server
+The Client shall interpret and react to the Subscribe Eventgroup Ack and Sub
+scribe Eventgroup Nack as specied in this document
+c
+TRSOMEIP00502 dThe following behavior and conguration constraints shall be
+supported by the Client
+The Client shall be able to handle Eventgroups if only the TTL of the SD Timings
+is specied This means that of all the timings for the Initial Wait Phase the
+Repetition Phase and the Main Phase only TTL is congured This means the
+client shall only react on the Offer Service by the Server
+The Client shall be able to answer to an Offer Service with an Subscribe Event
+group even without conguration of the RequestResponseDelay meaning it
+should not wait but answer instantaneously
+c
+TRSOMEIP00503 dThe Client and Server shall implement the Reboot Detection
+as specied in this document and react accordingly This includes but is not limited to
+Setting Session ID and Reboot Flag according to this specication
+Keeping a Session ID counter only used for sending Multicast SD messages
+Understanding Session ID and Reboot Flag according to this specication
+Keeping a Multicast Session ID counter per ECU that exchanges Multicast SD
+messages with this ECU
+Detecting reboot based on this specication and reaction accordingly
+85 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+c
+TRSOMEIP00504 dThe Client and Server shall implement the Endpoint Handling
+for Service and Events This includes but is not limited to
+Adding 1 Endpoint Option UDP to an Offer Services if UDP is needed
+Adding 1 Endpoint Option TCP to an Offer Service if TCP is needed
+Adding 1 Endpoint Option UDP to Subscribe Eventgroup if events over UDP are
+required
+Adding 1 Endpoint Option TCP to Subscribe Eventgroup if events over TCP are
+required
+Adding 1 Multicast Option UDP to Subscribe Eventgroup Ack if multicast events
+are required
+Understanding and acting according to the Endpoint and Multicast Options trans
+ported as described above
+Overwritting precongured values eg IP Addresses and Ports with the infor
+mation of these Endpoint and Multicast Options
+c
+6710 SOMEIPSD Mechanisms and Errors
+TRSOMEIP00505 dIn this section SOMEIPSD in cases of errors eg lost or
+corrupted packets is discussed This may also be understood as rationale for the
+mechanisms used and the conguration possible c
+TRSOMEIP00506 dSoft State Protocol
+SOMEIPSD was designed as soft state protocol that means that entries come with a
+lifetime and need to be referesh to stay valid this can be turned off by setting the TTL
+to the maximum value
+Using cyclic Offer Service entries and the TTL as aging mechanism SOMEIPSD can
+cope with many different cases of errors Some examples
+If a client or server leaves without sending a Stop entry or this Stop entry got lost
+the system will x itself after the TTL expiration
+If an Offer Service entry does not arrive because the packet got lost the system
+will tolerate this based on the value of the TTL
+Example conguration parameter for fast healing cyclic delays 1s and TTL 3s
+c
+TRSOMEIP00507 dInitial Wait Phase
+86 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+The Initial Wait Phase was introduced for two reasons deskewing events of starting
+ECUs to avoid trafc bursts and allowing ECUs to collect multiple entries in SD mes
+sagesc
+TRSOMEIP00508 dRepetition Phase
+The Repetition Phase was introduced to allow for fast synchronization of clients and
+servers If the clients startup later it will nd the server very fast And if the server
+starts up later the client can be found very fast The Repetition Phase increases the
+time between two messages exponentially to avoid that overload situtaions keep the
+system from synchronization
+An example conguration could be REPETITIONSBASEDELAY30ms and REPTI
+TIONSMAX3 c
+TRSOMEIP00509 dMain Phase
+In the Main Phase the SD tries to stabilize the state and thus decreases the rate of
+packets by sending no Find Services anymore and only offers in the cyclic interval
+eg every 1sc
+TRSOMEIP00510 dRequestResponseDelay
+SOMEIPSD can be congured to delay the answer to entries in multicast messages
+by the RequestResponseDelay in FIBEX called QueryResponseDelay This is
+useful in large systems with many ECUs When sending a SD message with many
+entries in it a lot of answers from different ECUs may arrive and put a large stress on
+the ECU receiving all these answers c
+68 Migration and Compatibility
+681 Supporting multiple versions of the same service
+TRSOMEIP00511 dIn order to support migrations scenarios ECUs shall support
+serving as well as using different incompatible versions of the same service c
+TRSOMEIP00512 dIn order to support a Service with more than one version the
+following is required
+The server shall offer the service instance of this service once per major version
+The client shall nd the service instances once per supported major version or
+shall use the major version as 0xFF all versions
+The client shall subscribe to events of the service version it needs
+All SOMEIPSD entries shall use the same ServiceIDs and InstanceIDs but
+different MajorVersion
+87 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+The server has to demultiplex messages based on the socket it arrives the
+MessageID and the MajorVersion
+c
+TRSOMEIP00513 dFor AUTOSAR supporting more than one version might mean
+that deserialization might has to be done by an serializer or proxy component c
+69 Reserved and special identiers for SOMEIP and SOMEIP
+SD
+In this chapter an overview of reserved and special identiers are shown
+TRSOMEIP00515 dReserved and special ServiceIDs
+ServiceID Description
+0x0000 Reserved
+0xFF00 
+0xFF1FReserved for Testing at OEM
+0xFF20 
+0xFF3FReserved for Testing at Tier1
+0xFFFE Reserved for announcing nonSOMEIP service instances
+0xFFFF SOMEIP and SOMEIPSD special service Magic Cookie
+SOMEIPSD 
+c
+TRSOMEIP00516 dReserved and special InstanceIDs
+InstanceID Description
+0x0000 Reserved
+0xFFFF All Instances
+c
+TRSOMEIP00517 dReserved and special MethodIDsEventIDs
+MethodID Description
+0x0000 Reserved
+0x7FFF Reserved
+0x8000 Reserved
+0xFFFF Reserved
+c
+88 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 
+Example for a Serialization Protocol SOMEIP
+V100
+R41 Rev 1
+TRSOMEIP00531 dReserved EvengroupIDs
+EventgroupID Description
+0x0000 Reserved
+0xFFFF All Eventgroups
+c
+TRSOMEIP00519 dMethodIDs and EventIDs of Service 0xFFFF
+Method
+IDEventIDDescription
+0x0000 SOMEIP Magic Cookie Messages
+0x8000 SOMEIP Magic Cookie Messages
+0x8100 SOMEIPSD messages events
+c
+TRSOMEIP00520 dBesides otherserv many other names can be used in the
+conguration option The following list gives an overview of the reserved names
+Name Description
+hostname Used to name a host or ECU
+instancename Used to name an instance of a service
+servicename Used to name a service
+otherserv Used for nonSOMEIP Services
+c
+89 of 89
+ AUTOSAR CONFIDENTIAL Document ID 637 AUTOSARTRSomeIpExample
+ 

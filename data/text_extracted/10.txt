@@ -1,0 +1,2103 @@
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+1 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+Document Title  Specification on SOMEIP 
+Transport Protocol  
+Document Owner  AUTOSAR  
+Document Responsibility  AUTOSAR  
+Document Identification No  809 
+  
+Document Status  published  
+Part of AUTOSAR Standard  Classic Platfo rm 
+Part of Standard Release  R2011 
+ 
+ 
+Document Change History  
+Date  Release  Changed by  Change Description  
+20201130 R2011 AUTOSAR 
+Release 
+Management   Several  minor bugfixes  
+ Editorial changes  
+2019 1128 R1911 AUTOSAR 
+Release 
+Management   Editorial changes  
+ Changed Document Status from 
+Final to published  
+2018 1031 440  AUTOSAR 
+Release 
+Management   Minor corrections  
+ Editorial changes  
+2017 1208 431  AUTOSAR 
+Release 
+Management   Clarification of t imeout to monitor 
+successful reception  
+ Editorial changes  
+2016 1130 430  AUTOSAR 
+Release 
+Management   Initial Release  
+ 
+ 
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+2 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+Disclaimer  
+ 
+This work specification and or software implementation and the material contained 
+in it as released by AUTOSAR is for the purpose of information only AUTOSAR 
+and the companies that have contributed to it shall not be liable for any use of the 
+work  
+The material contained in this work is protected by copyright and other types of 
+intellectual property rights The commercial exploitation of the material contained in 
+this work requires a license to such intellectual property rights  
+This work may be util ized or reproduced without any modification in any form or by 
+any means for informational purposes only For any other purpose no part of the 
+work may be utilized or reproduced in any form or by any means without permission 
+in writing from the publish er 
+The work has been developed for automotive applications only It has neither been 
+developed nor tested for non automotive applications  
+The word AUTOSAR and the AUTOSAR logo are registered trademarks  
+ 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+3 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+Table of Contents  
+ 
+1 Introduction and functional overview     5 
+2 Acronyms and abbreviations     6 
+3 Related documentation      7 
+31 Input documents      7 
+32 Related standards and norms      7 
+33 Related specificati on     7 
+4 Constraints and assumptions      8 
+41 Limitations      8 
+42 Applicability to car domains      8 
+5 Dependencies to other  modules      9 
+51 AUTOSAR PDU Router      9 
+52 AUTOSAR Default Error Tracer     9 
+6 Requirements traceability      10 
+7 Functional specification      12 
+71 Overview of the SOMEIP header     13 
+711  Message Type Field      13 
+712  Offset Field      14 
+713  Reserved Field      14 
+714  More Segments Flag      14 
+715  Example      15 
+72 Segmentation of SOMEIP messages TX Path     17 
+721  Size of SOMEIP segments     17 
+722  Header of SOMEIP s egments     19 
+723  Sending of SOMEIP segments     21 
+724  Interruption of the disassembly process     23 
+73 Assembly of received SOMEIP messages RX path    24 
+731 SOMEIP segment received with Offset 0     27 
+732  SOMEIP segment received with Offset 0     29 
+733  Interruption of the assembly process     30 
+74 Error classification      33 
+741  Development Errors     33 
+742  Runtime Errors      33 
+743  Transient Faults      34 
+744  Production Errors      34 
+745  Extended Production Errors     34 
+8 API specification      35 
+81 Imported types      35 
+82 Type definitions      35 
+83 Function definitions      37 
+831  SomeIpTpGetVersionInfo     37 
+832  SomeIpTpInit      38 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+4 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+833  SomeIpTpTransmit      38 
+84 Callback notifications      40 
+841  SomeIpTpTriggerTransmit     40 
+842  SomeIpTpRxIndication      41 
+843  SomeIpTpTxConfirmation     42 
+85 Scheduled functions      43 
+851  SomeIpTpMainFunctionTx     43 
+852  SomeIpTpMainFuncti onRx     43 
+86 Expected Interfaces      45 
+861  Mandatory Interfaces      45 
+862  Optional Interfaces      45 
+863  Configurable interfaces      46 
+9 Sequence diagrams      47 
+91 Reception      47 
+92 Transmission      49 
+10 Configuration specification      51 
+101  Containers and configuration parameters     51 
+1011  SomeIpTp      51 
+1012  SomeIpTpGeneral      52 
+1013  SomeIpTpChannel      54 
+1014  SomeIpTpRxNSdu      55 
+1015  SomeIpTpRxNPdu      56 
+1016  SomeIpTpTxNSdu      57 
+1017  SomeIpTpTxNPdu      58 
+11 Not applicable requirements      59 
+ 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+5 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+1 Introduction and functional overview  
+ 
+This specification specifies the functionality API and the configuration of the 
+AUTOSAR Basi c Software module SOMEIP TP  
+ 
+The task of the SOMEIP TP module is to segment SOMEIP packets which do not 
+fit into one single UDP packet On the reception side it re assembles the received 
+SOMEIP segments  
+ 
+ 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+6 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+2 Acronyms and abbreviations  
+ 
+ 
+Abbreviation  
+Acronym  Description  
+SOMEIP  Scalable service Oriented MiddlewarE over IP  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+7 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+3 Related documentation  
+31 Input documents  
+1 AUTOSAR Layered Software Architecture  
+AUTOSAR EXP LayeredSoftwareArchitecturepdf  
+2 AUTOSAR General Requirements on Basic Software Modules  
+AUTOSARSRS BSW Generalpdf  
+3 AUTOSAR General Specification for  Basic Software Modules  
+AUTOSAR SWS BSW Generalpdf  
+4 AUTOSAR Requirements on SOMEIP Protocol  
+AUTOSARRSSOMEIPProtocol pdf 
+5 AUTOSAR SOMEIP Protocol Specification  
+AUTOSARPRSSOMEIPProtocol pdf 
+6 AUTOSAR PDU Router  
+AUTOSARSWSPDURouterpdf  
+ 
+32 Related standards and norms  
+7 IEC 7498 1 The Basic Model IEC Norm 1994  
+33 Related specification  
+AUTOSAR provides a General Specification on Basic Software SWS BSW 
+General 3 which  is also valid for the SOMEIP TP module  
+ 
+Thus the specification SWS BSW General 3shall be considered as additional and 
+required  specification for SOMEIP TP module  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+8 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+4 Constraints and assumptions  
+41 Limitations  
+ 
+The SOMEIP TP is a simpl e protocol to segment SOMEIP messages I t does not 
+implement retry mechanism nor  does it reorder ing of  received SOMEIP segments  
+ 
+These limitations are intended to spare runtime and memory resources on receiver 
+side  Nonetheless this is a deviation from the AUTOSAR SOMEIP Protocol 
+Specificat ion PRSSOMEIP00747 to PRSSOMEIP00754  
+ 
+The rational for these limitations is the typical use case which is streaming of large 
+SOMEIP messages   
+ 
+42 Applicability to car domains  
+This module is applicable for SOMEIP communication  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+9 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+5 Dependencies to other modules  
+ 
+51 AUTOSAR PDU Router  
+The SOMEIP TP module uses the PduR for both directions the transmission path 
+and the reception path  
+52 AUTOSAR Default Error Tracer  
+ 
+In order to be able to report development  errors the SOMEIP TP module  has to have 
+acce ss to the error hook of the Default Error Tracer  
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+10 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+6 Requirements traceability  
+ 
+Requirement  Description  Satisfied by  
+RSSOMEIP00010  SOMEIP protocol shall 
+support different transport 
+protocols underneath  SWSSomeIpTp00001 SWSSomeIpTp00002 
+SWSSomeIpTp00004 SWSSomeIpTp00005 
+SWSSomeIpTp00006 SWSSomeIpTp00008 
+SWSSomeIpTp00010 SWSSomeIpTp00011 
+SWSSomeIpTp00012 SWSSomeIpTp00013 
+SWSSomeIpTp00014 SWSSomeIpTp00015 
+SWSSomeIpTp000 16 SWSSomeIpTp00017 
+SWSSomeIpTp00018 SWSSomeIpTp00019 
+SWSSomeIpTp00020 SWSSomeIpTp00021 
+SWSSomeIpTp00022 SWSSomeIpTp00023 
+SWSSomeIpTp00024 SWSSomeIpTp00025 
+SWSSomeIpTp00026 SWSSomeIpTp00027 
+SWSSomeIpTp00028 SWSSomeIpTp 00029 
+SWSSomeIpTp00032 SWSSomeIpTp00033 
+SWSSomeIpTp00034 SWSSomeIpTp00035 
+SWSSomeIpTp00036 SWSSomeIpTp00037 
+SWSSomeIpTp00038 SWSSomeIpTp00039 
+SWSSomeIpTp00040 SWSSomeIpTp00041 
+SWSSomeIpTp00042 SWSSomeIpTp00045 
+SWSSome IpTp00048 SWSSomeIpTp00049 
+SWSSomeIpTp00050 SWSSomeIpTp00051 
+SWSSomeIpTp00054 SWSSomeIpTp00062 
+SWSSomeIpTp00063 SWSSomeIpTp00064 
+SWSSomeIpTp00077  
+RSSOMEIP00011  SOMEIP protocol shall 
+support messages of 
+different lengths  SWSSom eIpTp00001 SWSSomeIpTp00002 
+SWSSomeIpTp00003 SWSSomeIpTp00004 
+SWSSomeIpTp00005 SWSSomeIpTp00006  
+RSSOMEIP00027  SOMEIP protocol shall 
+define the header layout 
+of messages  SWSSomeIpTp00006 SWSSomeIpTp00009 
+SWSSomeIpTp00010 SWSSom eIpTp00011 
+SWSSomeIpTp00012 SWSSomeIpTp00013 
+SWSSomeIpTp00014 SWSSomeIpTp00015 
+SWSSomeIpTp00026 SWSSomeIpTp00077  
+RSSOMEIP00051  SOMEIP protocol shall 
+provide support for 
+segmented transmission 
+of large data  SWSSomeIpTp00002 SWSSom eIpTp00004 
+SWSSomeIpTp00005 SWSSomeIpTp00009 
+SWSSomeIpTp00012 SWSSomeIpTp00035 
+SWSSomeIpTp00042 SWSSomeIpTp00048 
+SWSSomeIpTp00063 SWSSomeIpTp00064  
+RSSOMEIP00738   SWSSomeIpTp00019 SWSSomeIpTp00023 
+SWSSomeIpTp00024 SWSSomeIpTp00025 
+SWSSomeIpTp00041 SWSSomeIpTp00050 
+SWSSomeIpTp00051  
+SRSBSW00301  All AUTOSAR Basic 
+Software Modules shall 
+only import the necessary 
+information  SWSSomeIpTp00043  
+SRSBSW00373  The main processing 
+function of each 
+AUTOSAR Basic Software 
+Module shall be named 
+according the defined 
+convention  SWSSomeIpTp00058 SWSSomeIpTp00069  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+11 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SRSBSW00384  The Basic Software 
+Module specifications 
+shall specify at least in the 
+descr iption which other 
+modules they require  SWSSomeIpTp00060 SWSSomeIpTp00061  
+SRSBSW00407  Each BSW module shall 
+provide a function to read 
+out the version information 
+of a dedicated module 
+implementation  SWSSomeIpTp00044 SWSSomeIpTp00046  
+SRSBSW 00411  All AUTOSAR Basic 
+Software Modules shall 
+apply a naming rule for 
+enablingdisabling the 
+existence of the API  SWSSomeIpTp00044 SWSSomeIpTp00046  
+SRSBSW00425  The BSW module 
+description template shall 
+provide means to model 
+the defined trigger 
+conditions of schedulable 
+objects  SWSSomeIpTp00058 SWSSomeIpTp00059 
+SWSSomeIpTp00069 SWSSomeIpTp00070  
+ 
+ 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+12 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+7 Functional specification  
+ 
+The task of the SOMEIP TP module is to segment SOMEIP packets which do not 
+fit into one single UDP packet  On the reception side it assemble s the received 
+SOMEIP segments  
+ 
+The SOMEIP TP module interacts with the PDU Router  for both directions the 
+transmission and the reception path  
+ 
+ 
+ 
+Figure 2  Location of the SOMEIP TP module  
+ 
+ 
+ 
+  
+
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+13 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+71 Overview of the SOMEIP header  
+ 
+This chapter describe the relevant parts of the SOMEIP header for the segmentation 
+of SOMEIP messages  
+ 
+The Message T ype field of the SOMEIP header contains a bit which marks the 
+SOMEIP  PDU as a segment  of an original SOMEIP message  Every segmented 
+SOMEIP message  adds  SOMEIP TP specific fields to the SOMEIP header  
+ 
+These fields contain control information for the  segment ation and the reassembly of  
+original large  SOMEIP messages How they are used is described in the following 
+chapters  
+ 
+ 
+ 
+Figure 3 SOMEIP TP header  
+ 
+Note   The Offset Field  the Reserved bits and the More Segment Flag are only 
+present if the TP Flag is set to 1  
+711  Message Type  Field  
+The Messag e Type Field contains the TP Flag which marks this  SOMEIP message 
+as a SOMEIP segment  of an original SOMEIP message   
+ 
+ 
+ 
+Figure 4  Location of the TP Flag 
+ 
+ 
+ Message Type 8 bit  
+bit offset  16 17 18 19 20 21 22 23 
+Value  x x 01 x x x x x 
+Name  
+ignore  
+ignore  
+TPFlag 
+ignore  
+ignore  
+ignore  
+ignore  
+ignore  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+14 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+712  Offset Field  
+ 
+The Offset Field 28 bits is located right after the Return Code field It starts  at bit 
+offset 0 and ends at bit offset 27 The contained value increases after every 
+transmitted received  segment according to the payload length of the previous 
+transmitted received  SOMEIP segment  
+ 
+The Offset F ield contains the Offset V alue in units of 16 bytes Eg If the Offset 
+Field  is set to 92 1472 Payload bytes have been transmitted so f ar These two 
+different terms are used in the remainder of this document   
+ 
+ 
+Note  The payload length provided in the Offset Field does not include the bytes 
+which are needed for the SOMEIP header  
+ 
+713  Reserved Field  
+ 
+The Reserved Field  3 bits  follows the Offset Field It starts at bit offset 28 and ends 
+at bit offset 30 These three bits are reserved and set to 0    
+ 
+714  More Segments Flag  
+ 
+The More Segments Flag 1  bit indicates whether  another segmented SOMEIP 
+PDU will follow  
+ 
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+15 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+715  Example  
+ 
+An original SOMEIP message of 5571 bytes payload  has to be  transmitted  
+The Length field  of this original SOMEIP message  is set to 8  5571 bytes  
+ 
+ 
+ 
+Figure 5  Example Header of Original SOMEIP message  
+ 
+ 
+This original SOMEIP message will now be segmented into 5 consecutive SOMEIP 
+segments Every  payload of these segments carries at most  1392  bytes in this 
+example  
+ 
+For these segments the SOMEIP TP module adds additional TP fields marked 
+red The Length field of the SOMEIP carries the overal l length of the SOMEIP 
+segment  including 8 bytes for the Request ID Protocol Version Interface Version 
+Message Type and Return Code  Because of th e added TP fields 4 bytes this 
+Length information is extended by 4 additional SOMEIP TP bytes  
+ 
+The f ollowing figure provides an overview of the relevant SOMEIP header settings 
+for every SOMEIP segment  
+ 
+ Length  Bytes  Message Type TP Flag  Offset Value  More Segment Flag  
+1st segment  8  4  1392   1404 TPFlag  1          0 1 
+2nd segment  8  4  1392  140 4 TPFlag  1  87 1 
+3rd segment  8  4   1392  140 4 TPFlag  1  174 1 
+4th segment  8  4   1392  140 4 TPFlag  1  261 1 
+5th segment  8  4    312    324  TPFlag  1  348 0 
+ 
+Figure 6  Example Overview of relevant SOMEIP TP headers  
+ 
+ 
+Note Please  be aware that the value provided within the Offset Field is given in units 
+of 16 bytes ie The Offset Value  of 87 correspond to 1 392 bytes Payload  
+ 
+ 
+ 
+
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+16 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+The complete SOMEIP  headers of the SOMEIP segments message will look like 
+this in detail  
+ 
+ The first 4 segments contain 1392 Payload bytes each with More Segments  
+Flag set to 1  
+ 
+ 
+ 
+Figure 7  Example Header of the SOMEIP segments  
+ 
+ 
+ The last segment ie 5 contains the remaining 312 Payload bytes of the 
+original 5771  bytes payload This last segment  is marked with More 
+Segments flag set to 0  
+ 
+ 
+ 
+Figure 8  Example Header of the last SOMEIP segment  
+ 
+
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+17 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+72 Segmentation of SOMEIP me ssages  TX Path  
+ 
+The following chapter describe the necessary activities of the SOMEIP TP module to 
+segment SOMEIP messages  
+721  Size of SOMEIP segments  
+ 
+ 
+SWSSomeIpTp00 001 
+The SOMEIP TP module shall remember the PDU  length separately for every PDU  
+ID which is passed by the PduInfoPtr  parameter of the SomeIpTpTransmit  
+call 
+ RSSOMEIP00010  RSSOMEIP00011  
+Note  
+The SOMEIP TP module needs this information to calculate the  payload size  the 
+Offset Value  and the More Segments Flag for the SOM EIP segments which are 
+going to be transmitted  
+SWSSomeIpTp00 002 
+The amount of generated SOMEIP segments shall be as little as possible  
+ RSSOMEIP00011  RSSOMEIP00010 RSSOMEIP00051  
+ 
+Note  This means that the SOMEIP TP module shall try to always use the maximum 
+allowed segmentation size  
+SWSSomeIpTp00 003 
+The size of every segmented SOMEIP message shall consist of the sum of 12 bytes 
+of SOMEIP header and the Payload bytes itself  
+ RSSOMEIP00011  
+SWSSomeIpTp00 004 
+The SOMEIP TP module shall derive the maximum possible size of the segmented 
+SOMEIP PDUs using the parameter SomeIpTpTxNPduRef   
+ RSSOMEIP00011  RSSOMEIP00010 RSSOMEIP00051  
+SWSSomeIpTp00 005 
+The SOMEIP TP module shall generate segmented SOMEIP PDUs not larger than 
+the size derived from the parameter SomeIpTpTxNPduRef   
+ RSSOMEIP00011 RSSOMEIP00010 RSSOMEIP00051  
+SWSSomeIpTp00 006 
+Every payload of a segmented SOMEIP message except the last one ha s to be a 
+multiple of 16 bytes  
+ RSSOMEIP00011 RSSOMEIP00010 RSSOMEIP00027  
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+18 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+Note   
+The last segment may consist of an odd payload or a payload which is not dividable 
+by 16 The amount of the contained payload bytes are  written into the Length field of 
+the SOMEIP header  
+ 
+ 
+SWSSomeIpTp00 007 
+The SOMEIP TP module shall buffer the pointer to the Meta data for every PDU ID 
+separately which is passed by the PduInfoPtr parameter of the API  
+SomeIpTpTransmit  and forward this information when  
+PduRSomeIpTpTransmit  is called for each segment  
+  
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+19 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+722  Header of SOMEIP segments  
+ 
+ 
+Every generated SOMEIP header for each SOMEIP segment is set to the following 
+values  
+ 
+The following fields are received by the upper la yer 
+ Request ID 32 bit   derived  value see SWSSomeIpTp00007  
+ Protocol Version 8 bit    derived  value see SWSSomeIpTp00007  
+ Interface Version 8 bit    derived  value see  SWSSomeIpTp00007  
+ Message Type 8  bit   calculated value see SWSSomeIpTp00008  
+ Return C ode 8  bit   derived  value see SWSSomeIpTp00007  
+ 
+The following fie lds are added by  the SOMEIP TP module  
+ Offset 28  bit    calculated value see SWSSomeIpTp00 011 
+ Reserved bits 3 bit    statically set to 000  see SWS SomeIpTp00012  
+ More Segment Flag  1 bit  calculated value see  SWSSomeIpTp00 013 
+ 
+ 
+SWSSomeIpTp00 008 
+The SOMEIP TP module shall store the Request ID Protocol Version Interface 
+Version Message Type and the Return Code of the SOMEIP header for every PDU 
+ID separately which is returned by the first call of  PduRSomeIpTpCopyTxData 
+triggered by the API call  SomeIpTpTransmit  
+ RSSOMEIP00010  
+Note  
+The SOMEIP header is contained in the first 8 bytes of the total length of the original 
+SOMEIP PDU The total length is provided via the API call 
+SomeIpTpTransmit  
+ 
+SWSSomeIpTp00 009 
+If the provided SDU fits into one single PDU the provided SOME IP header shall be 
+used with no modification   
+ 
+If the provided SDU does not fit into one single SOMEIP PDU t he SOMEIP TP  
+module  shall set the TP Flag of the Message Type to 1  for every SOMEIP segment 
+which is going to be sent on the bus  via the Pdu R  
+All the other bits contained in the Message Type field shall stay untouched  
+ 
+ RSSOMEIP00027 RSSOMEIP00051  
+SWSSomeIpTp00 010 
+The SOMEIP TP module shall create  and attach  the Offset Field the Reserved b its 
+and the More Segment Flag to every SOMEIP segment which is going to be sent on 
+the bus  
+ RSSOMEIP00010 RSSOMEIP00027  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+20 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SWSSomeIpTp00 011 
+The Offset Field  of the first SOMEIP segment shall be set to 0  
+ RSSOMEIP00010 RSSOMEIP00027  
+ 
+SWSSomeIpTp00 012 
+The SOMEIP TP module shall increase the value of the Offset Field  for every 
+successfully transmitted SOMEIP segment by the amount of bytes which ha ve been 
+transmitted by the previous SOMEIP segment  divided by 16   
+ RSSOMEIP00010 RSSOMEIP00027  RSSOMEIP00051  
+SWSSomeIpTp00 013 
+The SOMEIP TP module shall set the Reserved bits statically to 000  by the sender 
+and shall be ignored by the receiver  
+ RSSOMEIP00010 RSSOMEIP00027  
+SWSSomeIpTp00 014 
+The SOMEIP TP module shall set  the More Segment Flag to 1 except for the last 
+SOMEIP segment  
+ RSSOMEIP00010 RSSOMEIP00027  
+SWSSomeIpTp00 015 
+The SOMEIP TP module shall set the More Segment Flag to 0 for the last SOMEIP 
+segment  
+ RSSOMEIP00010 RSSOMEIP00027  
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+21 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+723  Sending of SOMEIP segments  
+ 
+SWSSomeIpTp00 016 
+If the API SomeIpTpTransmit  is called the SOMEIP TP module shall check 
+for an ongoing segmentation for the provided PDU ID  
+ RSSOMEIP00010  
+SWSSomeIpTp00 017 
+If the API SomeIpTpTransmit is called while no segmentation is ongoing for this 
+PDU ID the SOMEIP TP module shall perform the following steps in the following 
+order  
+ Remember the provided PDU length provided PduInfoPtr  
+ Derive the PDU ID which sha ll be used for every segmented SOMEIP PDU 
+see SomeIpTpTxNPduRef  
+ Calculate  the size of the SOMEIP for the first segment  considering header and 
+payload  
+ Call the API PduRSomeIpTpTransmit  using the derived PDU ID and the 
+calculated PDU size  and set the SduDataPtr to NULLPTR   
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 018 
+When the API SomeIpTpTriggerTransmit  is called create the header for the 
+SOMEIP segment and call the API PduRSomeIpTpCopyTxData using the 
+calculated payload for this se gment  and set the parameter retry  to NULLPTR  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 019 
+To calculate the possible maximum size for all consecutive  SOMEIP TP segment s 
+the SOMEIP TP module shall consider the available buffer size of the upper layer by 
+evaluating the availableDataPtr  provided by  the API 
+PduRSomeIpTpCopyTxData   
+IeThe payload size of the next SOMEIP TP segment needs to be smaller or equal 
+to the av ailable buffer AND dividable by 16 for all segments but for the last  
+ RSSOMEIP00010  RSSOMEIP00738  
+ 
+SWSSomeIpTp00 020 
+The SOMEIP TP module shall debounce s ubsequent calls of the API 
+PduRSomeIpTpTransmit for the same  PDU ID using the parameter 
+SomeIpTpNPduSeparationTime  
+It defines the time span between the call of SomeIpTpTxConfirmation  and 
+the subsequent call of the API  PduRSomeIpTpTransmit  
+ RSSOMEIP00010  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+22 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+SWSSomeIpTp00 021 
+If the last SOMEIP segment of the original SOMEIP PDU has been transmitted 
+successfully ie the call of SomeIpTp TxConfirmation with parameter success 
+equals TRUE occurred for the last call of PduRSomeIpTpCopyTxData  the 
+SOMEIP TP module shall  
+ Call the API PduRSomeIpTp TxConfirmation  
+ RSSOMEIP00010  
+Note  
+With the call of PduRSomeIpTp TxConfirmation  the segmentation process is 
+finished  
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+23 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+724  Interru ption of the disassembly process  
+ 
+SWSSomeIpTp00 022 
+If the API SomeIpTpTransmit  is called with a PDU ID which is currently used 
+for an ongoing segmentation  
+ ENOTOK shall be returned  
+ The ongoing dis assembly process for this PDU ID shall be canceled  
+ The API PduRSomeIpTpTxConfirmation with result set to ENOTOK 
+shall be called  
+ The API DetReportRuntimeError  shall be called with the runtime error 
+code SOMEIPTPEDISASSEMBLYINTERRUPT  
+ RSSOMEIP00010  
+SWSSomeIpTp00 023 
+If the API SomeIpTpTxConfirmation  is called with parameter success set to 
+FALSE   
+ The disassembly process for this PDU ID shall be canceled  
+ The API PduRSomeIpTp TxConfirmation with result set to 
+ENOTOK shall be called  
+ The API DetReportRuntimeError  shall be called with the runtime  error 
+code  SOMEIPTPEDISASSEMBLYINTERRUPT   
+ RSSOMEIP00010  RSSOMEIP00738  
+ 
+SWSSomeIpTp00 024 
+If the availableDataPtr  provided by  the API PduRSomeIpTpCopyTxData  
+is smaller than 16 bytes  or smaller than required for the last SOMEIP TP segment   
+ The disassembly process for this PDU ID shall be canceled  
+ The API PduRSomeIpTp TxConfirmation with result set to 
+ENOTOK shall be called  
+ The API DetReportRuntimeError  shall be called with the runtime error 
+code  SOMEIPTPEDISASSEMBLYINTERRUPT   
+ RSSOMEIP00010  RSSOMEIP00738  
+ 
+SWSSomeIpTp00 025 
+If an API PduRSomeIpTpCopyTxData returns something else than 
+BUFREQOK  
+ The disassembly process for this PDU ID shall be canceled  
+ The API PduRSomeIpTp TxConfirmation with result  set to 
+ENOTOK shall be called  
+ The API DetReportRuntimeError  shall be called with the runtime  error 
+code  SOMEIPTPEDISASSEMBLYINTERRUPT   
+ RSSOMEIP00010  RSSOMEIP00738  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+24 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+73 Assembly of received SOMEIP messages  RX path  
+ 
+SWSSomeIpTp00 031 
+If SomeIpTpRxIndication is called with TP Flag set to 0 SOMEIP TP shall 
+call PduRSomeIpTpStartOfReception PduRSomeIpTpCopyRxData 
+and PduRSomeIpTpRxIndication  directly after each other providing the 
+received indication  
+  
+SWSSomeIpTp00 071 
+If SomeIpTpRxIndication  is called with  
+ TP Flag set to 1  
+ Offset Field set to 0 and  
+ More Segment Flag set to 0  
+SOMEIP TP shall call PduRSomeIpTpStartOfReception  
+PduRSomeIpTpCopyRxData  and SomeIpTpRxIndication  directly after 
+each other providing the received indication  
+  
+ 
+SWSSomeIpTp00 026 
+If the API SomeIpTp RxIndication  is called the SOMEIP TP module shall 
+derive the following SOMEIP header information from the first 12 bytes of the 
+received PDU  
+ Request ID 32 bit    
+ Protocol Version 8 bit    
+ Interface Version 8 bit    
+ Message Type 8  bit   
+ Return C ode 8  bit   
+ Offset 28  bit 
+ Reserved bits 3 bit  
+ More Segment Flag  1 bit 
+ RSSOMEIP00010  RSSOMEIP00010 RSSOMEIP00027  
+SWSSomeIpTp00 077 
+If the TP flag is not set and no assembly session is active only the following 
+parameters shall be extracted   
+ Request ID  32 bit  
+ Protocol Version  8 bit  
+ Interface Version  8 bit  
+ Message Type  8 bit  
+ Return Code  8 bit  
+ RSSOMEIP00010  RSSOMEIP00027  
+ 
+ 
+SWSSomeIpTp00 027 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+25 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+The SOMEIP TP module shall be able to store the value of the Offset Field  for every 
+PDU ID separately  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 028 
+The SOMEIP TP module shall be able to store  the number  of Payload bytes  for 
+every PDU ID separately which has been  passed by a call of 
+SomeIpTp RxIndication  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 029 
+The SOMEIP TP module shall store the status of the More Segment Flag for every 
+PDU ID separately which is passed by a call of SomeIpTPRxIndication  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 030 
+The SOMEIP TP module shall buffer the pointer to the Meta data for every PDU ID 
+separately which is passed by the PduInfoPtr  parameter of the API  
+SomeIpTpRxIndication  and forward this information when 
+PduRSomeIpTpStartOf Reception  is called  
+  
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+26 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+27 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+731  SOMEIP segment received with Offset 0  
+ 
+ 
+SWSSomeIpTp00 032 
+If a SOMEIP segment is  successfully  received with Offset Field  set to 0 the 
+SOMEIP TP module shall store the values  of the received SOMEIP header for each 
+PDU ID separatelyThese values shall be used as reference values for the 
+expected following consecutive receiv ing SOMEIP segments ie with Offset Field  
+set to  0  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 033 
+If a SOMEIP segment is successfully received with Offset Field  set to 0 the 
+SOMEIP TP module shall  
+ Start the Rx timeout time  defined by  SomeIpTpRxTimeoutTime  
+ Call the API PduRSomeIpTpStartOfReception  with the PDU ID  
+derived from the parameter SomeIpTpRxSduRef  and the TpSduLength  
+set to 0  
+ RSSOMEIP00010  
+Note  
+TpSduLength  set to 0 indicates unknown message length to the upper layers  
+ 
+SWSSomeIpTp00 034 
+If a SOMEIP segment is successfully received with Offset Field  set to 0 and after the 
+SOMEIP TP module has called the API PduRSomeIpTpStartOfReception  
+the SOME IP TP module shall check the returned bufferSizePtr   
+ 
+If the bufferSizePtr  is greater or equal to the sum of the received payload and 
+the added SOMEIP header the SOMEIP TP module shall call the API 
+PduRSomeIpTpCopyRxData  to pass the following assembled SOMEIP 
+message  This PDU shall contain the following content  
+ Request ID 32 bit    
+ Protoc ol Version 8 bit    
+ Interface Version 8 bit    
+ Message Type 8  bit  see SWSSomeIpTp00 028 
+ Return C ode 8  bit 
+ Payload  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 035 
+The SOMEIP TP module shall set the TP Flag contained in the Message Type back 
+to 0 before the assembled SOMEIP header is passed to the upper layer  
+ RSSOMEIP00010 RSSOMEIP00051  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+28 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SWSSomeIpTp00 036 
+The SOMEIP TP module shall store the number  of Payload bytes for every PDU ID 
+separately which has been passed to the upper layer  
+ RSSOMEIP00010  
+Note  
+This information will be used to verify the Offset Value  of the consecutive SOMEIP 
+segments  
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+29 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+732  SOMEIP segment received with Offset  0 
+ 
+SWSSomeIpTp00 037 
+If a SOMEIP segment is successfully received with Offset Field  0 the SOMEIP TP 
+module shall compare the received SOMEIP header fields with the values of the 
+stored SOMEIP header fields  which has been received with the first segment ie 
+Offset was set to 0  
+ Request ID 32 bit    
+ Protocol Version 8 bit    
+ Interfa ce Version 8 bit    
+ Message Type 8  bit   
+ Return C ode 8  bit   
+ 
+ 
+If these values match  restart the SomeIpTpRxTimeoutTime  and continue with the 
+assembly process  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 038 
+The SOMEIP TP module shall store the number  of Payload bytes for every PDU ID 
+separately which has been passed to the upper layer  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 039 
+The SOMEIP TP module shall compare the value of the Offset Field  with the sum  
+divided by 16  of copied Payload bytes since the first received SOM EIP segment ie 
+with Offset F ield set to 0  
+If this sum  divided by 16  matches with the current Offset V alue and i f the 
+bufferSizePtr  provided by the previous call of  the API 
+PduRSomeIpTpCopyRxDat ais greater or equal to the  received payload  call the 
+API PduRSomeIpTpCopyRxData with SduLength  set to the received Payload 
+bytes  
+ RSSOMEIP00010  
+Note  
+In case of Offset Field  value   0 only the Payload bytes are provided to the upper 
+layer without any SOMEIP header fields  
+ 
+SWSSomeIpTp00 040 
+If a SOMEIP segment is successfully received with the More Segment Flag set to 0 
+the SOMEIP TP module shall 
+ Cancel the Rx timeout tim e defined by  SomeIpTpRxTimeoutTime  
+ Call the API PduRSomeIpTpRxIndication  after it has copied the 
+remaining received Payload bytes  to the upper layer as defined in 
+SWSSomeIpTp00033  
+ RSSOMEIP00010  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+30 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+733  Interruption of the assembly process  
+ 
+SWSSomeIpTp00 041 
+If the Rx timeout time defined by SomeIpTpR xTimeoutTime  expires  
+ The current assembly process shall be interrupted as defined by 
+SWSSomeIpTp00054  
+ The API DetReportRuntimeError  shall be called with the runtime e rror 
+code  SOMEIPTPEASSEMBLYINTERRUPT  
+ RSSOMEIP00010  RSSOMEIP00738  
+ 
+SWSSomeIpTp00 042 
+If the API SomeIpTpRxIndication  is called with the Offset Value is  0 but no 
+session is currently running  
+ The received PDU shall be ignored  
+ The API DetReportRuntimeError  shall be called with the runtime error 
+code  SOMEIPTPEINCONSISTENTSEQUENCE  
+ RSSOMEIP00010  RSSOMEIP00051  
+Note  This check identifies that at least the first segment has not been received  
+ 
+SWSSomeIpTp00 054 
+If the SOMEIP TP module interrupts the assembly process because of a detected 
+error  the SOMEIP TP module shall  
+ Call the API  PduRSomeIpTpRxIndication for this PDU ID with 
+ENOTOK  
+ The Rx timeout time defined by SomeIpTpRxTimeoutTime  shall be cance led 
+if sti ll running  for this PDU ID  
+ RSSOMEIP00010  
+Note  The possible reasons for interruptions are listed below  
+ 
+SWSSomeIpTp00 062 
+If the SOMEIP TP module detect s an inconsistency of the received SOMEIP TP 
+headers  ie Request ID Protocol Version  Interface Version  Message Typ e or 
+Return Code  are not equal for all received segments  
+ The current assemb ly process shall be interrupted as defined by 
+SWSSomeIpTp000 54 
+ The API DetReportRuntimeError  shall be called with the r untime error 
+code  SOMEIPTPEINCONSISTENTHEADER  
+ RSSOMEIP00010  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+31 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+SWSSomeIpTp00 045 
+If the API SomeIpTpRxIndication  is called  and a session is currently active  
+the SOMEIP TP module shall check if the TP Flag of the Message Type is set to 1 
+If the TP Flag is not set to  1  
+ The current assembly process shall be interrupt ed as defined by 
+SWSSomeIpTp000 54   
+ The API DetReportRuntimeError  shall be called with the r untime error 
+code  SOMEIPTPEMESSAGETYPE   
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 063 
+If the API SomeIpTpRxIndication  is called the SOMEIP TP module shall 
+check whether the received payload bytes are dividable by 16 in case the More 
+Segment Flag is set to 1   
+If the received payload bytes are not dividable by 16 in this case   
+ The current assembly  process shall be interrupted as defined by 
+SWSSomeIpTp000 54   
+ The API DetReportRuntimeError  shall be called with the r untime error 
+code  SOMEIPTPEASSEMBLYINTERRUPT   
+ RSSOMEIP00010  RSSOMEIP00051  
+ 
+SWSSomeIpTp00 064 
+If the API SomeIpTpRxIndication  is called the SOMEIP TP module shall 
+check the value of the Offset Field  If the Offset V alue in units of 16 bytes does not 
+match to the sum of the received Payload bytes  of the previous SOMEIP segments   
+ The current assembl y process shall be interrupted as defined by 
+SWSSomeIpTp000 54   
+ The API DetReportRuntimeError  shall be called with the runtime error 
+code  SOMEIPTPE INCONSISTENTSEQUENCE   
+ RSSOMEIP00010  RSSOMEIP00051  
+ 
+SWSSomeIpTp00 048 
+If the API SomeIpTpRxIndication  is called the SOMEIP TP module shall 
+check the value of the Offset Field  If the received Offset Value equals 0  while the  
+received  Payload bytes of the previous SOMEIP segments  is greater than 0  the 
+SOMEIP TP module shall perform  the following steps in the following order  
+ The current assembly process shall be interrupted  as defined by 
+SWSSomeIpTp000 54   
+ The API DetReportRuntimeError  shall be called with the runtime  error 
+code  SOMEIPTPEINCONSISTENTSEQUENCE  
+ Start the assembly process according to chapter 731 SOMEIP segment 
+received with Offset 0  
+ RSSOMEIP00010 RSSOMEIP00051  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+32 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+SWSSomeIpTp00 049 
+If the bufferSizePtr provided by the API  PduRSomeIpTpStartOfReception or 
+PduRSomeIpTpCopyRxData is smaller than the sum of the received and the 
+added SOMEIP header in case of the first segment or the received payload in 
+case of any subsequent segme nt  
+ The current assembl y process shall be interrupted as defined by 
+SWSSomeIpTp000 54   
+ The API DetReportRuntimeError shall be called with the runtime e rror 
+code  SOMEIPTPEASSEMBLYINTERRUPT  
+ RSSOMEIP00010  
+ 
+SWSSomeIpTp00 050 
+If the API PduRSomeIpTpCopyR xDatareturns something else than 
+BUFREQOK  
+ The assembly process for this PDU ID shall be interrupted  as defined by 
+SWSSomeIpTp000 54   
+  
+ The API DetReportRuntimeError  shall be called with the runtime error 
+code  SOMEIPTPEASSEMBLYINTERRUPT   
+ RSSOMEIP00010  RSSOMEIP00738  
+ 
+SWSSomeIpTp00 051 
+If the API PduRSomeIpTpStartOfReception  returns something else than 
+BUFREQOK  
+ The assembly process for this PDU ID  shall be  stopped  
+ The API DetReportRuntimeError  shall be called with the runtime e rror 
+code  SOMEIPTPEASSEMBLYINTERRUPT   
+ RSSOMEIP00010  RSSOMEIP00738  
+ 
+  
+ 
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+33 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+74 Error classification  
+Section 7 2 Error Handling of the document General Specification of Basic 
+Software Modules  3 describes the error handling of the Basic Software in detail 
+Above all it constitutes a classification scheme consisting of five error types which 
+may occur in BSW modules  
+Based on this foundation the following section specifies particular errors arranged in 
+the respective subsections below  
+ 
+741  Development Errors  
+SWSSomeIpTp00052  
+Type of error  Related error code  Error value  
+SOME IP TP module not initialized  SOMEIPTP EUNINIT  0x01  
+Null pointer has been passed as an argument  SOMEIPTP EPARAM POINTER  0x02  
+Unknown parameter has been passed  SOMEIPTP EPARAM  0x03  
+ 
+ 
+742  Runtime Errors  
+SWSSomeIpTp00065  
+Type of error  Related error code  Error 
+value  
+The TP Flag of Message Type was set 
+to 0  SOMEIPTP EMESSAGE TYPE  0x04  
+Inconsistent subsequent segment 
+received  SOMEIPTP EINCONSISTENT
+SEQUENCE  0x05  
+Inconsistent header received  SOMEIPTP EINCONSISTENT HEADER  0x06  
+Disassembly Interrupt due to the upper 
+layer  SOMEIPTP EDISASSEMBLY
+INTERRUPT  0x07  
+Assembly Interrupt due to the upper layer  SOMEIPTP EASSEMBLY INTERRUPT  0x08  
+ 
+ 
+ 
+Note   In reference to run time error SOMEIPTPEMESSAGETYPE no DET will 
+be reported for unsegmented message and is passed to the upper layer without 
+further handling  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+34 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+743  Transient Faults  
+There are no transient faults  
+744  Production Errors  
+There are no production errors  
+745  Extended Production Errors  
+There are no extended production errors  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+35 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+8 API specification  
+81 Imported types  
+In this chapter all types included from  the following modules  are listed  
+ 
+ 
+SWSSomeIpTp00043  
+Module  Header File  Imported Type  
+Com Stack Types  Com Stack Typesh  BufReqReturn Type  
+Com Stack Typesh  PduIdType  
+Com Stack Typesh  PduInfoType  
+Com Stack Typesh  PduLength Type  
+Com Stack Typesh  Retry InfoType  
+Com Stack Typesh  TpData State Type  
+Std StdTypesh  StdReturn Type  
+StdTypesh  StdVersion InfoType  
+ 
+SRSBSW00301  
+ 
+ 
+82 Type definitions  
+ 
+SWSSomeIpTp91002  
+Name  Some IpTpConfig Type  
+Kind  Structure  
+Elements  implementation specific  
+Type   
+Comment   
+Description  This type shall contain at least all parameters that are post build able according to 
+chapter 10  
+Available 
+via Some IpTph 
+ 
+ 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+36 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+37 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+83 Function definitions  
+831  SomeIpTp GetVersionInfo  
+ 
+SWSSomeIpTp00044  
+Service Name  Some IpTpGetVersion Info 
+Syntax  void SomeIpTpGetVersionInfo  
+  StdVersionInfoType VersionInfo 
+ 
+Service ID hex  0x01  
+Sync Async  Synchronous  
+Reentrancy  Reentrant  
+Parameters in  None  
+Parameters inout  None  
+Parameters out  Version Info Pointer to where to store the version information of this module  
+Return value  None  
+Description  Returns the version information of this module  
+Available via  Some IpTph 
+ 
+SRSBSW00407 SRSBSW00411  
+ 
+ 
+SWS SomeIpTp 00066  
+If the parameter SomeIpTp VersionInfoPtr of the API 
+SomeIpTp GetVersionInfo  equals NULLPTR and if development error 
+detection is enabled ie SomeIpTp DevErrorDetect  is set to TRUE  the function 
+SomeIpTp GetVersionInfo  the API DetReportError shall be called with 
+the development  error code SOMEIPTP EPARAMPOINTER  
+  
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+38 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+832  SomeIpTpInit  
+ 
+SWSSomeIpTp00046  
+Service Name  Some IpTpInit 
+Syntax  void SomeIpTpInit  
+  const SomeIpTpConfigType config 
+ 
+Service ID hex  0x02  
+Sync Async  Synchronous  
+Reentrancy  Non Reentrant  
+Parameters in  config  Base pointer to the configuration structure of the SOME IP TP module  
+Parameters inout  None  
+Parameters out  None  
+Return value  None  
+Description  Initializes the SOME IP TP module  
+Available via  Some IpTph 
+ 
+SRSBSW00407 SRSBSW00411  
+ 
+Note  
+The AUTOSAR ECU StateManager calls this SOMEIP TP  API service with the 
+address of the static configuration structure of the module in parameter 
+SomeIpTp ConfigPtr  
+ 
+833  SomeIpTpTransmit  
+ 
+SWSSomeIpTp00047  
+Service Name  Some IpTpTransmit  
+Syntax  StdReturnType SomeIpTpTransmit   
+  PduIdType TxPduId 
+  const PduInfoType PduInfoPtr 
+ 
+Service ID hex  0x49  
+Sync Async  Synchronous  
+Reentrancy  Reentrant for different Pdu Ids Non reentrant for the same Pdu Id 
+Parameters in  TxPduId Identifier of the PDU to be transmitted  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+39 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+PduInfoPtr Length of and pointer to the PDU data and pointer to Meta
+Data  
+Parameters 
+inout  None  
+Parameters out  None  
+Return value  StdReturn 
+Type  EOK Transmit request has been accepted  
+ENOT OK Transmit request has not been accepted  
+Description  Requests transmission of a PDU  
+Available via  Some IpTph 
+ 
+ 
+ 
+ 
+ 
+SWS SomeIpTp 00076  
+If SomeIpTpTransmit is called before t he SOMEIP TP module has been 
+initialized with a call of SomeIpTpInit  the AP shall return with ENOTOK and 
+stop the new session  
+ 
+ 
+SWS SomeIpTp 00073  
+If development error detection is enabled SomeIpTpTransmit  shall check that 
+the service SomeIpTp Init was previously cal led If the check fails 
+SomeIpTp Transmit shall raise the development error SOMEIPTPEUNINIT  
+   
+ 
+SWS SomeIpTp 00074  
+If parameter TxPduId  of SomeIpTpTransmit  has an invalid value and if 
+development error detection is enabled ie SomeIpTpDevErrorDetect  is set to 
+TRUE  the API DetReportError  shall be called with the development error 
+code  SOMEIPTPEPARAM  
+ 
+ 
+SWS SomeIpTp 00075 
+If parameter PduInfoPtr of SomeIpTpTransmit  equals NULLPTR and if 
+development error detection is enabled ie SomeIpTpDevErrorDetect  is set to 
+TRUE  the API DetReportError  shall be called with the development error 
+code  SOMEIPTPEPARAMPOINTER  
+  
+ 
+ 
+ 
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+40 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+84 Callback notifications  
+841  SomeIpTp TriggerTransmit  
+ 
+SWSSomeIpTp00053  
+Service 
+Name  Some IpTpTrigger Transmit  
+Syntax  StdReturnType SomeIpTpTriggerTransmit   
+  PduIdType TxPduId 
+  PduInfoType PduInfoPtr 
+ 
+Service ID 
+hex  0x41  
+Sync Async  Synchronous  
+Reentrancy  Reentrant for different Pdu Ids Non reentrant for the same Pdu Id 
+Parameters 
+in TxPduId ID of the SDU that is requested to be transmitted  
+Parameters 
+inout  PduInfoPtr Contains a pointer to a buffer Sdu Data Ptr to where the SDU data shall 
+be copied and the available buffer size in Sdu Lengh On return the 
+service will indicate the length of the copied SDU data in Sdu Length  
+Parameters 
+out  None  
+Return value  Std
+Return 
+Type  EOK SDU has been copied and Sdu Length indicates the number of 
+copied bytes  
+ENOT OK No SDU data has been copied Pdu InfoPtr must not be 
+used since it may contain a NULL pointer or point to invalid data  
+Description  Within this API  the upper layer module called module shall check whether the 
+available data fits into the buffer size reported by Pdu InfoPtrSdu Length If it fits it 
+shall copy its data into the buffer provided by Pdu InfoPtrSdu Data Ptr and update 
+the length of the actual copied data in Pdu InfoPtrSdu Length If not it returns E
+NOT OK without changing Pdu InfoPtr 
+Available via  Some IpTph 
+ 
+ 
+ 
+ 
+ 
+SWS SomeIpTp 00072  
+If development error detection is enabled SomeIpTp TriggerTransmit  shall 
+check that the service SomeIpTpInit  was previously cal led If the check fails  
+SomeIpTpTriggerTransmit shall raise the development error 
+SOMEIPTPEUNINIT  
+   
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+41 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+ 
+SWS SomeIpTp 00055 
+In case the given PduInfoPtr SduLength  is smalle r than the computed size of 
+the SOMEIP TP segment considering header and payload 
+SomeIpTpTriggerTransmit  shall not copy any data and return ENOTOK  
+ 
+842  SomeIpTpRxIndication  
+SWSSomeIpTp00056  
+Service Name  Some IpTpRxIndication  
+Syntax  void SomeIpTpRxIndication   
+  PduIdType RxPduId 
+  const PduInfoType PduInfoPtr 
+ 
+Service ID 
+hex  0x42  
+Sync Async  Synchronous  
+Reentrancy  Reentrant for different Pdu Ids Non reentrant for the same Pdu Id 
+Parameters 
+in RxPdu
+Id ID of the received PDU  
+Pdu
+InfoPtr Contains the length Sdu Length of the received PDU a pointer to a 
+buffer Sdu DataPtr containing the PDU and the Meta Data related to this 
+PDU  
+Parameters 
+inout  None  
+Parameters 
+out  None  
+Return value  None  
+Description  Indication of a received PDU from a lower layer communication interface module  
+Available via  Some IpTph 
+ 
+ 
+ 
+SWS SomeIpTp 00057  
+If development error detection is enabled SomeIpTp RxIndication  shall check 
+that the service SomeIpTpInit  was previously cal led If the check fails 
+SomeIpTp RxIndication shall raise the development error 
+SOMEIPTPEUNINIT  
+   
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+42 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+843  SomeIpTpTxConfirmation  
+ 
+SWSSomeIpTp91001  
+Service Name  Some IpTpTxConfirmation  
+Syntax  void SomeIpTpTxConfirmation   
+  PduIdType TxPduId 
+  StdReturnType result 
+ 
+Service ID hex  0x40  
+Sync Async  Synchronous  
+Reentrancy  Reentrant for different Pdu Ids Non reentrant for the same Pdu Id 
+Parameters in  TxPduId ID of th e PDU that has been transmitted  
+result  EOK The PDU was transmitted E NOT OK Transmission of the 
+PDU failed  
+Parameters 
+inout  None  
+Parameters 
+out  None  
+Return value  None  
+Description  The lower layer communication interface module confirms the transmission of a 
+PDU or the failure to transmit a PDU  
+Available via  Some IpTph 
+ 
+ 
+ 
+ 
+SWS SomeIpTp 00067  
+If development error detection is enabled SomeIpTp TxConfirmation  shall 
+check that the service SomeIpTpInit  was previously cal led If the check fails 
+SomeIpTp TxConfirmation shall raise the development error 
+SOMEIPTPEUNINIT  
+   
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+43 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+85 Scheduled functions  
+851  SomeIpTp MainFunction Tx 
+ 
+SWSSomeIpTp00058  
+Service Name  Some IpTpMain Function Tx 
+Syntax  void SomeIpTpMainFunction Tx  
+  void 
+ 
+Service ID 
+hex  0x03  
+Description  This function performs the processing of the AUTOSAR SOME IP TP modules 
+transmission activities  
+Available via  SchMSome IpTph 
+ 
+SRSBSW00373 SRSBSW00425  
+ 
+ 
+SWS SomeIpTp 00059A call to SomeIpTp MainFunction Tx shall simply 
+return if the AUTOSAR SOMEIP TP  module was not previously initialized with a call 
+to SomeIpTp InitSRSBSW00425  
+ 
+852  SomeIpTp MainFunction Rx 
+ 
+SWSSomeIpTp00069  
+Service Name  Some IpTpMain Function Rx 
+Syntax  void SomeIpTpMainFunction Rx  
+  void 
+ 
+Service ID 
+hex  0x04  
+Description  This function performs the processing of the AUTOSAR SOME IP TP modules 
+reception activities  
+Available via  SchMSome IpTph 
+ 
+SRSBSW00373 SRSBSW00425  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+44 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+ 
+SWS SomeIpTp 00070A call to SomeIpTpMainFunction Rx shall simply 
+return if the AUTOSAR SOMEIP TP  module was not previously initialized with a call 
+to SomeIpTpInit SRSBSW00425  
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+45 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+86 Expected Interfaces  
+In this  chapter all  external  interfaces required from other modules are listed  
+861  Mandatory Interfaces  
+This chapter defines all  external  interfaces which are required to fulfill the core 
+functionality of the module  
+ 
+SWSSomeIpTp00060  
+API Function  Header 
+File Description  
+DetReport 
+Runtime Error  Deth  Service to report runtime errors If a callout has been configured then 
+this callout shall be called  
+PduRSome Ip
+TpCopy RxData  PduR
+Some Ip
+Tph This function is called to provide the received data of an I PDU 
+segment N PDU to the upper layer Each call to this function 
+provides the next part of the I PDU data The size of the remaining 
+buffer is written to the position indicated by buffer SizePtr 
+PduRSome Ip
+TpCopy TxData  PduR
+Some Ip
+Tph This function is called to acquire the trans mit data of an I PDU 
+segment N PDU Each call to this function provides the next part of 
+the IPDU data unless retry TpData State is TP DATARETRY In this 
+case the function restarts to copy the data beginning at the offset from 
+the current position in dicated by retry TxTpData Cnt The size of the 
+remaining data is written to the position indicated by available Data Ptr 
+PduRSome Ip
+TpRxIndication  PduR
+Some Ip
+Tph Called after an I PDU has been received via the TP API the result 
+indicates whether the transmission was successful or not  
+PduRSome Ip
+TpStart Of
+Reception  PduR
+Some Ip
+Tph This function is called at the start of receiving an N SDU The N SDU 
+might be fragmented into multiple N PDUs FF with one or more 
+following CFs or  might consist of a single N PDU SF The service 
+shall provide the currently available maximum buffer size when 
+invoked with Tp SduLength equal to 0  
+PduRSome Ip
+TpTransmit  PduR
+Some Ip
+Tph Requests transmission of a PDU  
+PduRSome Ip
+TpTx
+Confirmation  PduR
+Some Ip
+Tph This function is called after the I PDU has been transmitted on its 
+network the result indicates whether the transmission was successful 
+or not  
+ 
+SRSBSW00384  
+ 
+862  Optional Interfaces  
+This chapter defines all external interfaces wh ich are required to fulfill an optional 
+functionality of the module  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+46 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SWSSom eIpTp00061  
+API Function  Header File  Description  
+DetReport Error  Deth  Service to report development errors  
+ 
+SRSBSW00384  
+863  Configurable interfaces  
+NA 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+47 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+9 Sequence diagrams  
+91 Reception  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+48 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SWC RTE Transformer LdCom PduR SomeIpTp SoAd
+alt receive chunk
+unexpected chunk received or errors in API calls
+first chunk received
+remaining chunksComplete sequence is 
+looped
+seq last chunk received
+LdComRxIndicationPduRSomeIpTpStartOfReceptionPduRSomeIpTpRxIndicationENOTOK
+LdComCopyRxData
+RteReadSomeIpTpRxIndication
+PduRSomeIpTpRxIndicationRteLdComCbkRxStartOfReceptionsnLdComStartOfReception
+RteLdComCbkTpRxIndicationsnCreate header
+RteLdComCbkCopyRxDatasnRteLdComCbkTpRxIndicationsnENOTOK
+deserializePduRSomeIpTpCopyRxDataLdComRxIndicationENOTOKPduRSoAdIfRxIndicaton 
+ 
+ 
+Sequence 9 1 Reception of SOMEIP segments  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+49 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+92 Transmission  
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+50 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SWC RTE Transformer LdCom PduR SomeIpTp SoAd
+loop for each segment in SOMEIP TP Main Function
+Note
+SoAd calls PduRSoAdIfTriggerTransmit 
+in the context of its main function
+loop for all segmentsCreate Headertransform
+LdComCopyTxData
+RteLdComCbkTpTxConfirmationsnRteLdComCbkCopyTxDataPduRSomeIpTpTransmitRteSend
+LdComTxConfirmationSomeIpTpTriggerTransmit
+SomeIpTpTxConfirmationPduRSoAdIfTriggerTransmitSomeIpTpTransmit
+PduRSomeIpTpCopyTxDataLdComTransmit
+PduRSomeIpTpTxConfirmationPduRLdComTransmit
+PduRSoAdIfTxConfirmationSoAdTransmit 
+Sequence 9 2 Transmission of SOMEIP segments  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+51 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+10 Configuration specification  
+Chapter  101 specifies the structure containers and the parameters of the module 
+SOMEIP  TP 
+ 
+Chapter  102 specifies additionally published information of the module SOMEIP  TP 
+ 
+101 Containers and configuration parameters  
+The following chapters summarize all configurat ion parameters The detailed 
+meanings of the parameters describe Chapters 7 and Chapter 8 
+ 
+1011  SomeIpTp  
+SWS Item  ECUCSomeIpTp00001   
+Module Name  SomeIpTp   
+Module Description  Configuration of the SomeIpTp module  
+Post Build Variant Support  true  
+Supported Config Variants  VARIANT LINK TIME VARIANT POST BUILD VARIANT PRECOMPILE  
+   
+Included Containers  
+Container Name  Multiplicity  Scope  Dependency  
+SomeIpTpChannel  1  This container contains the configuration parameters of the 
+SomeIpTp channel  
+SomeIpTpGeneral  1  This container contains the general configuration parameter s 
+of the SomeIpTp module  
+   
+ 
+ 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+52 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SomeIpTp 
+EcucModuleDef
+lowerMultiplicity  0
+upperMultiplicity  1SomeIpTpGeneral 
+EcucParamConfContainerDef
+SomeIpTpChannel 
+EcucParamConfContainerDef
+lowerMultiplicity  1
+upperMultiplicity  
+AUTOSARParameterDefinition 
+EcucDefinitionCollectioncontainercontainer
+module 
+ 
+ 
+1012  SomeIpTpGeneral  
+SWS Item  ECUCSomeIpTp00002   
+Container Name  SomeIpTpGeneral  
+Parent Container  SomeIpTp   
+Description  This container contains the general configuration parameters of the 
+SomeIpTp module  
+Configuration Parameters  
+   
+SWS Item  ECUCSomeIpTp00004   
+Name  
+ SomeIpTpDevErrorDetect   
+Parent Container  SomeIpTpGeneral   
+Description  Switches the Development Error Detection and Notification ON or OFF  
+Multiplicity  1  
+Type  EcucBooleanParamDef   
+Default value    
+Post Build Variant Value  false  
+Value Configuration Class  Precompile time  X  All Variants  
+Link time       
+Post build time       
+Scope  Dependency  scope local   
+   
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+53 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SWS Item  ECUCSomeIpTp00021   
+Name   
+ SomeIpTpRxMainFunctionPeriod   
+Parent Container  SomeIpTpGeneral   
+Description  This parameter defines the cycle time in seconds of the periodic call of the 
+SomeIpTpMainFunctionRx  
+Multiplicity  1  
+Type  EcucFloatParamDef   
+Range  0  INF     
+Default value    
+Post Build Variant Value  false  
+Value Configuration Class  Precompile time  X  All Variants  
+Link time       
+Post build time       
+Scope  Dependency  scope local   
+   
+SWS Item  ECUCSomeIpTp00005   
+Name  
+ SomeIpTpTxMainFunctionPeriod   
+Parent Container  SomeIpTpGeneral   
+Description  This parameter defines the cycle time in seconds of the periodic call of the 
+SomeIpTpMainFunctionTx  
+Multiplicity  1  
+Type  EcucFloatParamDef   
+Range  0  INF     
+Default value    
+Post Build Variant Value  false  
+Value Configuration Class  Precompile time  X  All Variants  
+Link time       
+Post build time       
+Scope  Dependency  scope local   
+   
+SWS Item  ECUCSomeIpTp00019   
+Name  
+ SomeIpTpVersionInfoApi   
+Parent Container  SomeIpTpGeneral   
+Description  Activates the SomeIpTpGetVersionInfo API  
+TRUE Enables the SomeIpTpGetVersionInfo API  
+FALSE SomeIpTpGetVersionInfo API is not included  
+Multiplicity  1  
+Type  EcucBooleanParamDef   
+Default value  false   
+Post Build Variant Value  false  
+Value Configuration Class  Precompile time  X  All Variants  
+Link time       
+Post build time       
+Scope  Dependency  scope local   
+   
+No Included Containers  
+   
+ 
+ 
+ 
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+54 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+SomeIpTpGeneral 
+EcucParamConfContainerDefSomeIpTpDevErrorDetect 
+EcucBooleanParamDef
+SomeIpTpTxMainFunctionPeriod 
+EcucFloatParamDef
+min  0
+max  INF
+SomeIpTpVersionInfoApi 
+EcucBooleanParamDef
+defaultValue  falseSomeIpTpRxMainFunctionPeriod 
+EcucFloatParamDef
+min  0
+max  INF
+parameterparameter
+parameter
+parameter 
+ 
+1013  SomeIpTpChannel  
+SWS Item  ECUCSomeIpTp00003   
+Container Name  SomeIpTpChannel  
+Parent Container  SomeIpTp   
+Description  This container contains the configuration parameters of the SomeIpTp 
+channel  
+Post Build Variant 
+Multiplicity  true  
+Multiplicity Configuration 
+Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Configuration Parameters  
+   
+SWS Item  ECUCSomeIpTp00006   
+Name  
+ SomeIpTpNPduSeparationTime   
+Parent Container  SomeIpTpChannel   
+Description  Sets the duration of the minimum time in seconds the SomeIpTp module 
+shall wait between the transmissions of N PDUs  
+Multiplicity  1  
+Type  EcucFloatParamDef   
+Range  0  INF     
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+55 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+Default value    
+Post Build Variant Value  true  
+Value Configuration Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Scope  Dependency  scope local   
+   
+SWS Item  ECUCSomeIpTp00023   
+Name  
+ SomeIpTpRxTimeoutTime   
+Parent Container  SomeIpTpChannel   
+Description  Timer to monitor the successful reception It is started when the first NPdu 
+is received restarted after reception of intermediate NPdus and is stopped 
+when the last NPdu has been received The value shall be calculated as 
+follows SomeIpTpRxTimeoutTime   SomeIpTpNPduSeparationTime  
+budget where the time budget compensates intermediary hops and jitters 
+within the ECU implementation  
+Multiplicity  1  
+Type  EcucFloatParamDef   
+Range  0  INF     
+Default value    
+Post Build Variant Value   true  
+Value Configuration Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Scope  Dependency  scope local   
+   
+Included Containers  
+Container Name  Multiplicity  Scope  Dependency  
+SomeIpTpRxNSdu  0  The following parameters needs to be configured for each N 
+SDU which has to be passed as one assembled RxPdu to the 
+upper layer  
+SomeIpTpTxNSdu  0  The following parameters needs to be configured  for each N 
+SDU that the SomeIpTp module transmits via the 
+SomeIpTpChannel  
+   
+ 
+ 
+ 
+1014  SomeIpTpRxNSdu  
+SWS Item  ECUCSomeIpTp00008   
+Container Name  SomeIpTpRxNSdu  
+Parent Container  SomeIpTpChannel   
+Description  The following parameters needs to be configured for each N SDU which 
+has to be passed as one assembled RxPdu to the upper layer  
+Post Build Variant 
+Multiplicity  true  
+Multiplicity Configuration 
+Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Configuration Parameters  
+   
+SWS Item  ECUCSomeIpTp00010   
+Name  
+ SomeIpTpRxSduRef   
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+56 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+Parent Container  SomeIpTpRxNSdu   
+Description  Reference to a Pdu in the COM Stack that represents the assembled 
+RxPdu which is passed via the PduR to the upper layer  
+Multiplicity  1  
+Type  Reference to  Pdu    
+Post Build Variant Value  true  
+Value Configuration Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Scope  Dependency   
+   
+Included Containers  
+Container Name  Multiplicity  Scope  Dependency  
+SomeIpTpRxNPdu  1  This container contains the configuration parameters of the 
+NPdu that is received from a lower layer  
+   
+ 
+ 
+ 
+ 
+1015  SomeIpTpRxNPdu  
+SWS Item  ECUCSomeIpTp00011   
+Container Name  SomeIpTpRxNPdu  
+Parent Container  SomeIpTpRxNSdu   
+Description  This container contains the configuration parameters of the NPdu that is 
+received from a lower layer  
+Configuration Parameters  
+   
+SWS Item  ECUCSomeIpTp00013   
+Name  
+ SomeIpTpRxNPduHandleId   
+Parent Container  SomeIpTpRxNPdu   
+Description  This parameter defines the handle ID that is used by the PduR when 
+calling SomeIpTpRxIndication  
+Multiplicity  1  
+Type  EcucIntegerParamDef Symbolic Name generated for this parameter   
+Range  0  65535     
+Default value    
+Post Build Variant Value  false  
+Value Configuration Class  Precompile time  X  All Variants  
+Link time       
+Post build time       
+Scope  Dependency  scope local   
+   
+SWS Item  ECUCSomeIpTp00012   
+Name  
+ SomeIpTpRxNPduRef   
+Parent Container  SomeIpTpRxNPdu   
+Description  Reference to a global Pdu that is used to harmonize HandleIDs in the 
+COM Stack  
+Multiplicity  1  
+Type  Reference to  Pdu    
+Post Build Variant Value  true  
+Value Configuration Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+57 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+Post build time  X  VARIANT POST BUILD  
+Scope  Dependency   
+   
+No Included Containers  
+   
+ 
+ 
+1016  SomeIpTpTxNSdu  
+SWS Item  ECUCSomeIpTp00009   
+Container Name  SomeIpTpTxNSdu  
+Parent Container  SomeIpTpChannel   
+Description  The following parameters needs to be configured for each N SDU that the 
+SomeIpTp module transmits via the SomeIpTpChannel  
+Post Build Variant 
+Multiplicity  true  
+Multiplicity Configuration 
+Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Configuration Parameters  
+   
+SWS Item  ECUCSomeIpTp00020   
+Name  
+ SomeIpTpTxNSduHandleId   
+Parent Container  SomeIpTpTxNSdu   
+Description  This parameter defines the handle ID of the NSdu that represents the 
+original TxSdu which is segmented and passed via the PduR to the lower 
+layer This handle ID is used by PduR when calling SomeIpTpTransmit  
+Multiplicity  1  
+Type  EcucIntegerParamD ef Symbolic Name generated for this parameter   
+Range  0  65535     
+Default value    
+Post Build Variant Value  false  
+Value Configuration Class  Precompile time  X  All Variants  
+Link time       
+Post build time       
+Scope  Dependency  scope local   
+   
+SWS Item  ECUCSomeIpTp00015   
+Name  
+ SomeIpTpTxNSduRef   
+Parent Container  SomeIpTpTxNSdu   
+Description  Reference to a global Pdu in the COM Stack that represents the original 
+TxSdu which is segmented and passed via the PduR to the lower layer  
+Multiplicity  1  
+Type  Reference to  Pdu    
+Post Build Variant Value  true  
+Value Configuration Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Scope  Dependency   
+   
+Included Containers  
+Container Name  Multiplicity  Scope  Dependency  
+SomeIpTpTxNPdu  1  This container contains the configuration parameters of the 
+segmented Tx NPdus that are transmitted to a lower layer  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+58 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+   
+ 
+ 
+ 
+1017  SomeIpTpTxNPdu  
+SWS Item  ECUCSomeIpTp00016   
+Container Name  SomeIpTpTxNPdu  
+Parent Container  SomeIpTpTxNSdu   
+Description  This container contains the configuration parameters of the segmented Tx 
+NPdus that are transmitted to a lower layer  
+Configuration Parameters  
+   
+SWS Item  ECUCSomeIpTp00017   
+Name  
+ SomeIpTpTxNPduHandleId   
+Parent Container  SomeIpTpTxNPdu   
+Description  This parameter defines the handle ID that is used by PduR when calling 
+SomeIpTpTriggerTransmit  
+Multiplicity  1  
+Type  EcucIntegerParamDef Symbolic Name generated for this parameter   
+Range  0  65535     
+Default value    
+Post Build Variant Value  false  
+Value Configuration Class  Precompile time  X  All Variants  
+Link time       
+Post build time       
+Scope  Dependency  scope local   
+   
+SWS Item  ECUCSomeIpTp00018   
+Name  
+ SomeIpTpTxNPduRef   
+Parent Container  SomeIpTpTxNPdu   
+Description  Reference to a global Pdu that is used to harmonize HandleIDs in the 
+COM Stack  
+Multiplicity  1  
+Type  Reference to  Pdu    
+Post Build Variant Value  true  
+Value Configuration Class  Precompile time  X  VARIANT PRECOMPILE  
+Link time  X  VARIANT LINK TIME  
+Post build time  X  VARIANT POST BUILD  
+Scope  Dependency   
+   
+No Included Containers  
+   
+ 
+  
+ 
+Specification on SOMEIP Transport Protocol  
+AUTOSAR CP R2011 
+ 
+59 of 59 Document ID 809AUTOSARSWSSOMEIPTransportProtocol  
+   
+11 Not applicable requirements  
+none  
+ 
+ 
+ 

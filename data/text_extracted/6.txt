@@ -1,0 +1,83 @@
+YOUR AUTOMOTIVE PROTOCOL STACKA journey from specification to SOP
+Dr Lars Vlker2020120304
+ 
+TABLE OF CONTENTSTECHNICA ENGINEERINGProtocol stack designRequirements engineeringTesting and integrationLogging and recordingYOUR AUTOMOTIVE PROTOCOL STACK
+ 
+CHAPTERPROTOCOL STACK DESIGN1
+ 
+RULES FOR STACK DESIGNDesigning a protocol stack is not difficultif you follow some rulesReuse standards as much as possible because this leads to better understanding and qualityLimit the number of protocols to lower complexity and raise quality since your resources are limitedLearn from other OEMs and dont reinvent the wheel What has been implemented and tested for another OEMs has already a better quality
+42020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+ 
+PROTOCOL STACK RECOMMENDATION
+52020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbHLayer 1Layer 2Layer 3Layer 4Layer 57
+100BASETXIEEE 8023100BASET1IEEE 80231000BASET1IEEE 8023Creditbased ShaperIEEE 8021QavMAC Layer and VLANsIEEE 8021QTCPIP StackegTCP  UDP  IP  ICMP  ARP  and DHCPIETF RFCsgPTPIEEE8021ASAVTPIEEE1722DoIPISO 13400SOMEIP  FDNegAUTOSARUDPNMAUTOSARDiagnosticsFlash UpdateControlCommunicationNetworkManagementAudioVideoTimeSync
+TimestampingMultiGigIEEE 8023chFigure Technica engineering basic protocol stack recommendation
+ 
+PROTOCOL STACK EXTENSIONSLayer 1 10BASET1SNew 10 Mbits Ethernet standardHalf duplex bus with special weighted round robinlike arbitrationMay allow to close gap on low endIEEE Time Sensitive Networking TSN features eg8021CB Frame Replication and Elimination for Reliability8021Qbu Frame preemption8021Qbv Enhancements for Scheduled Traffic8021Qch Cyclic Queuing and Forwarding8021Qci PerStream Filtering and PolicingOptimal TSN feature set still under industrywide discussion 62020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+ 
+PROTOCOL STACK EXTENSIONS 2Network SecurityIEEE MACsec 8021AE can protect all unicast multicastand broadcast messages at linespeedSSLTLS IPsec and VPN protocols for backend connectivitySecOCallows application layer protection for selected use casesAccess ControlEthernet Access Control 8021XSOMEIP policy enforcementFilteringPacket filters mainly on layer 2 3 4Intrusion Detection IDSScalable distributed solution based on protocols build in72020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+ 
+WHY USE SOMEIPWhy is SOMEIP the most used middleware for automotiveSOMEIP creates the abstraction needed for automotive applicationsSOMEIP scales from very small embedded devices to high performance ECUsSOMEIP Service Discovery allows controlled flexibility with user controlSOMEIP supported by AUTOSAR Classic and AdaptiveSOMEIP is license freeSOMEIP serialization is very efficient and fastSOMEIP is more than just serialization and service discoverySOMEIP was purposedesigned for automotive use cases
+82020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+ 
+INSIGHT SOMEIP SERIALIZATIONThe faster your communication getsthe more resources serialization needs On embedded systems your resources are very limitedYou want a middleware with high efficiency and high performanceTextbased formats are typically very slow in serialization and deserialization due to string operationsSelfdescriptive formats are slow due to copy operationsSOMEIP allows you to build the most efficient highperformance systemFormat optimized for low resources and high speed92020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbHselfdescriptivenondescriptive
+textbinary
+Figure Comparison of serialization methodsXMLJSONSOMEIPProtoBufFlatBufBest for prototypingVery SlowSlowVery fastSlowRaw structFastest due to zerocopy
+Here be dragonsTLV formatsFlexBuf
+ 
+INSIGHT SOMEIPSD TIMINGSSOMEIPSD defines three phasesInitial wait phase allows to system to get readyRepetition phase used for fast synchronizationMain phase stabilizes the systemThe choice of the timings is very criticalDetermines startup performanceDefines the behavior when errors occurA thorough analysis is requiredand experience helpsStarting pointRepetitionBaseDelay30RepetitionsMax3MainCycle1sTTL3s102020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbHServerClientsOfferOffer30ms60msOffer120msOfferOfferInit
+1sFigure SOMEIPSD timing example
+ 
+TRANSPORTING CAN OVER ETHERNETTransporting legacy CAN messagesHow to transport and how to gatewayInsights of our Flexible Digital Network workAvoid complex gatewaying to keep performance up and latency downUse standard transport for CANFlexRayCANFD to Ethernet and back to another CANFD below 2ms latency
+112020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+ 
+CHAPTERREQUIREMENTS ENGINEERING2
+ 
+REQUIREMENT ENGINEERINGTypical issues with specificationsSpecification is hard to understandOften the goal is to specify and not to explain But Tier1 needs to understandSpecifications are too large and too manyImplementers cannot remember 1000 spec pages Reference standards instead of creating your ownAUTOSAR configuration changes behavior a lotHard to understand the behavior OEMs wantBetterInclude explanations in specificationReference as much as possible and stick to standardsPresentations for the specification and system design132020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbHIDTypeTextEx001InfoThis specification determines how SOMEIP is used as the invehicle MiddlewareEx002ReqThe ECU shall support SOMEIP based on 1
+ 
+CHAPTERTESTING AND INTEGRATION3
+ 
+STACK TESTINGMany OEMs are not testing the stacks enoughSince this is new technology and quite complexStack testing is hardStack testing requires expertsCommon mistake leave Tier1 alone with stack testingIf Tier1 misunderstands requirements Tier1 cannot find the issueRecommendation use 3rdparty or 3rdparty tools for testingCommon problem OEM specifics are not tested by standard tools2020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH15Layer 1Layer 2Layer 3Layer 4Layer 57
+100BASETXIEEE 8023100BASET1IEEE 80231000BASET1IEEE 8023Creditbased ShaperIEEE 8021QavMAC Layer and VLANsIEEE 8021QTCPIP Stackeg TCP UDP IP ICMP ARP and DHCPIETF RFCsgPTPIEEE8021ASAVTPIEEE1722DoIPISO 13400SOMEIP  FDNeg AUTOSARUDPNMAUTOSARDiagFlashControlCommunicationNMAudioVideoTimeSync
+Timestamping
+MultiGigIEEE 8023ch
+ 
+INTEGRATIONMany aspects of the communication stack are distributedProblem You cannot find all problems in just testing a single ECU Soyou find them when you put together the vehicle for testingSolution Frontloading of integration of Ethernet networkFor better quality you want to integrate all Ethernet ECUs as early as possibleYou need to record the dataYou need to test the integrationYou need to analyze resultsBenefit Ethernet cluster is stable faster Overall quality much better162020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbHLayer 1Layer 2Layer 3Layer 4Layer 57
+100BASETXIEEE 8023100BASET1IEEE 80231000BASET1IEEE 8023Creditbased ShaperIEEE 8021QavMAC Layer and VLANsIEEE 8021QTCPIP StackegTCP UDP IP ICMP ARP and DHCPIETF RFCsgPTPIEEE8021ASAVTPIEEE1722DoIPISO 13400SOMEIP  FDNegAUTOSARUDPNMAUTOSARDiagFlashControlCommunicationNMAudioVideoTimeSync
+TimestampingMultiGigIEEE 8023chLayer 1Layer 2Layer 3Layer 4Layer 57
+100BASETXIEEE 8023100BASET1IEEE 80231000BASET1IEEE 8023Creditbased ShaperIEEE 8021QavMAC Layer and VLANsIEEE 8021QTCPIP StackegTCP UDP IP ICMP ARP and DHCPIETF RFCsgPTPIEEE8021ASAVTPIEEE1722DoIPISO 13400SOMEIP  FDNegAUTOSARUDPNMAUTOSARDiagFlashControlCommunicationNMAudioVideoTimeSync
+TimestampingMultiGigIEEE 8023ch
+Layer 1Layer 2Layer 3Layer 4Layer 57
+100BASETXIEEE 8023100BASET1IEEE 80231000BASET1IEEE 8023Creditbased ShaperIEEE 8021QavMAC Layer and VLANsIEEE 8021QTCPIP StackegTCP UDP IP ICMP ARP and DHCPIETF RFCsgPTPIEEE8021ASAVTPIEEE1722DoIPISO 13400SOMEIP  FDNegAUTOSARUDPNMAUTOSARDiagFlashControlCommunicationNMAudioVideoTimeSync
+TimestampingMultiGigIEEE 8023chLayer 1Layer 2Layer 3Layer 4Layer 57
+100BASETXIEEE 8023100BASET1IEEE 80231000BASET1IEEE 8023Creditbased ShaperIEEE 8021QavMAC Layer and VLANsIEEE 8021QTCPIP StackegTCP UDP IP ICMP ARP and DHCPIETF RFCsgPTPIEEE8021ASAVTPIEEE1722DoIPISO 13400SOMEIP  FDNegAUTOSARUDPNMAUTOSARDiagFlashControlCommunicationNMAudioVideoTimeSync
+TimestampingMultiGigIEEE 8023ch
+Layer 1Layer 2Layer 3Layer 4Layer 57
+100BASETXIEEE 8023100BASET1IEEE 80231000BASET1IEEE 8023Creditbased ShaperIEEE 8021QavMAC Layer and VLANsIEEE 8021QTCPIP StackegTCP UDP IP ICMP ARP and DHCPIETF RFCsgPTPIEEE8021ASAVTPIEEE1722DoIPISO 13400SOMEIP  FDNegAUTOSARUDPNMAUTOSARDiagFlashControlCommunicationNMAudioVideoTimeSync
+TimestampingMultiGigIEEE 8023ch
+ 
+CHAPTERLOGGING AND RECORDING4
+ 
+COMMON PROBLEMS IN LOGGINGEthernet logging is more difficult than CAN loggingData is only present on the links needed you need to log all linksThe amount of data can be quite highThe logging setup must no interfere with timing sensitive protocols eg IEEE 8021AS  PTPEven CANFD does not like changes to the topologyIn many vehicles it is impossible to record all CANFDs with a logger onlySolutionLook for equipment designed for EthernetSplit data acquisition probes off the data logger2020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH18
+ 
+DLT XCP ETC IN VEHICLESProblemPacket injection for DLT or XCP needed for logger to talk directly to ECUPacket injection can interfere with timings on link changing the system you are measuring and this is not acceptable for IEEE 8021AS and othersSolutionEthernet packet injection without changing the link timings when injecting is needed
+2020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH19
+ 
+LINKS AND TIMESTAMPS MATTERProblem you need to analyze lost or misrouted data but the recorded logs do not have the required information to find the problemSolutionData needs to be recorded on every link and marked with link and direction as wellData needs to be timestamped right at the link
+2020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH20
+ 
+LINK FAILURESProblem In vehicles with a logging setup1 packets seemed to be lost and the communication was not stableAnalysis It turned out that links were not stable and short linkdownlinkup cycles happened from time to time Analysis was very hard and the root cause was even harder to findSolutionRecord link qualityRecord linkup  linkdownDo automated analysis on this dataQuality control you test car fleet1 Equipment of another vendor so we cannot share details212020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+ 
+LOGGING STATE OF THE ARTState of the art logging setupSplit Logger and Capture Modules CMLogger synchronizes time to CMsCMs send data via TECMP to loggerSmall example on the right3x 1000BASET1 lines12x 100BASET1 lines12x CANFD2x FlexRayChA20x LIN4x RS2328x AnalogDigital4x AnalogDigital galv Isolated222020120304NikkeiBPAutomotive Ethernet Tech Days 2020  Technica Engineering GmbHEthernet Logging device10 Gbits8 x 1000BASET2 x SFP 10 GbpsAVBcapable
+
+ 
+LOGGING STATE OF THE ART 2Technically Enhanced Capture Module Protocol TECMPFree and open stateoftheart protocolSupport data and meta data exchange between capture modules and loggerSupport Ethernet CAN CANFD FlexRay LIN RS232 Serial Analog and othersFully supported by Wireshark 34 Out now
+232020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+
+ 
+SUMMARYProtocol stack designReuse standards and be focusedRequirements engineeringMake Tier1s2s understandTesting and integrationLet a 3rdparty test and integrate earlyLogging and recordingGo for stateoftheart solutions with all key featuresOverallthese recommendation raise the quality of your product242020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbH
+ 
+STAY CONNECTED
+252020120304NikkeiBP Automotive Ethernet Tech Days 2020  Technica Engineering GmbHTechnicaEngineering GmbH Leopoldstrae236 80807 Munich GermanyDr Lars VlkerTechnical FellowLarsVoelkertechnicaengineeringdeProduct distribution in JapanTel81422268211Emailsalesgailogiccojpplease visit the websitehttpswwwgailogiccojpaeteEngineering partner in JapanTel81332451250Emailautomotiveicttoyocojp
+
+ 
